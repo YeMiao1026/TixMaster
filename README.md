@@ -16,9 +16,9 @@
 | Role | Member Name | Core Responsibilities |
 | :--- | :--- | :--- |
 | **Project Manager** | **YeMiao1026** | • 定義商業假設 (HDD) 與驗證指標<br>• 專案進度管理 (Jira/Timeline)<br>• 安全治理策略制定 (Governance)<br>• 實驗數據分析與報告撰寫 |
-| **Full-Stack Developer** | yuchen | • 前端介面開發 (React/Vue) 與 UI 設計<br>• 實作 Feature Toggles 邏輯<br>• 整合 OAuth 2.0 身份驗證<br>• API 開發與單元測試 |
-| **DB Manager / Ops** | EnSai | • 資料庫架構設計與雲端託管<br>• **Secret Management** (GitHub Secrets / .env)<br>• **SCA** 軟體成分分析工具設定 (Dependabot)<br>• CI/CD 流水線與自動化部署 |
-| **Tester** | Isforuse | • 撰寫測試矩陣 (Test Matrix)<br>• 執行 Feature Toggle 開關切換測試<br>• 安全性測試 (Security Testing)<br>• 迴歸測試與品質保證 |
+| **Full-Stack Developer** | Galin12341 | • 前端介面開發 (React/Vue) 與 UI 設計<br>• 實作 Feature Toggles 邏輯<br>• 整合 OAuth 2.0 身份驗證<br>• API 開發與單元測試 |
+| **DB Manager / Ops** | Saisai568 | • 資料庫架構設計與雲端託管<br>• **Secret Management** (GitHub Secrets / .env)<br>• **SCA** 軟體成分分析工具設定 (Dependabot)<br>• CI/CD 流水線與自動化部署 |
+| **Tester** | ww123 | • 撰寫測試矩陣 (Test Matrix)<br>• 執行 Feature Toggle 開關切換測試<br>• 安全性測試 (Security Testing)<br>• 迴歸測試與品質保證 |
 
 ---
 
