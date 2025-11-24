@@ -110,7 +110,7 @@ app.use('/api/analytics', analyticsRouter);
  * 如果你想直接從後端服務前端 HTML 檔案
  * 取消下面這行的註解：
  */
-// app.use(express.static('../'));  // 提供根目錄的靜態檔案
+app.use(express.static('../'));  // 提供根目錄的靜態檔案
 
 /**
  * ❌ 404 處理

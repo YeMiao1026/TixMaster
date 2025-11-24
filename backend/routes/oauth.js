@@ -90,7 +90,7 @@ router.get('/google/callback',
              * 優點：token 不會被伺服器記錄
              * 缺點：需要前端 JavaScript 處理
              */
-            res.redirect(`/simple.html#token=${token}`);
+            res.redirect(`/login.html#token=${token}`);
 
             /**
              * 方式二：透過 Query parameter (?)
