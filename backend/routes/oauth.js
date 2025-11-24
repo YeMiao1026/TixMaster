@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const passport = require('../config/passport');
 const jwt = require('jsonwebtoken');
+const { ROLES } = require('../config/roles');
 
 /**
  * 🚀 OAuth 路由檔案
@@ -76,6 +77,8 @@ router.get('/google/callback',
                 {
                     userId: user.id,
                     email: user.email,
+                    // Include role if available; default to USER
+                    role: user.role || ROLES.USER,
                     // 特別標記：這是 OAuth 登入的使用者
                     loginMethod: 'google'
                 },
