@@ -1,83 +1,295 @@
-# 🎫 TixMaster - Secure Ticket Sales System
+# 🎫 TixMaster - 售票系統
 
-> **Course:** Assignment 11 — Team-Based DevSecOps Feature Experimentation
-> **Team:** Tame
+> **DevSecOps 售票平台** | 整合 HDD 假設驗證與流量控制
 
-## 📖 Project Overview
+## 📋 專案簡介
 
-**TixMaster** 是一個結合 **DevSecOps** 流程與 **HDD (Hypothesis-Driven Development)** 方法論的安全售票系統模擬平台。
+TixMaster 是一個現代化的售票系統，採用 **Hypothesis-Driven Development (HDD)** 方法論，透過功能開關 (Feature Toggles) 進行 A/B Testing，同時具備完整的流量控制機制。
 
-本專案的核心目標不在於傳統的功能開發，而在於建立一套安全的開發維運流程，並透過 **Feature Toggling (功能開關)** 技術，在不重新部署的情況下進行商業假設驗證 (A/B Testing)。我們致力於解決高併發售票場景下的使用者體驗問題，同時確保嚴格的身份驗證與資料安全。
-
----
-
-## 👥 Team & Responsibilities (Role Allocation)
-
-| Role | Member Name | Core Responsibilities |
-| :--- | :--- | :--- |
-| **Project Manager** | **YeMiao1026** | • 定義商業假設 (HDD) 與驗證指標<br>• 專案進度管理 (Jira/Timeline)<br>• 安全治理策略制定 (Governance)<br>• 實驗數據分析與報告撰寫 |
-| **Full-Stack Developer** | Galin12341 | • 前端介面開發 (React/Vue) 與 UI 設計<br>• 實作 Feature Toggles 邏輯<br>• 整合 OAuth 2.0 身份驗證<br>• API 開發與單元測試 |
-| **DB Manager / Ops** | Saisai568 | • 資料庫架構設計與雲端託管<br>• **Secret Management** (GitHub Secrets / .env)<br>• **SCA** 軟體成分分析工具設定 (Dependabot)<br>• CI/CD 流水線與自動化部署 |
-| **Tester** | ww123 | • 撰寫測試矩陣 (Test Matrix)<br>• 執行 Feature Toggle 開關切換測試<br>• 安全性測試 (Security Testing)<br>• 迴歸測試與品質保證 |
+**核心特色：**
+- ✅ 完整的使用者註冊/登入系統
+- ✅ 活動展示與詳細資訊頁面
+- ✅ 購票數量選擇與即時價格計算
+- ✅ HDD 功能開關（觀看人數、倒數計時）
+- ✅ 資料庫完整設計（8 個核心資料表）
+- ✅ 安全設計（bcrypt 密碼雜湊）
 
 ---
 
-## 🧪 HDD & Feature Experiments
+## 📁 檔案結構
 
-本專案基於兩個核心商業假設進行開發，並透過 Feature Toggles 進行驗證：
-
-### Hypothesis 1: Urgency Tactic (急迫感設計)
-* **Hypothesis:** 若在結帳頁面加入「倒數計時器」，將能製造稀缺感，進而提升用戶的結帳完成率。
-* **Metric:** Payment Completion Rate (付款完成率)。
-* **Toggle Key:** `ENABLE_CHECKOUT_TIMER`
-
-### Hypothesis 2: Social Proof (社交證明)
-* **Hypothesis:** 若在活動頁顯示「當前瀏覽人數」，利用從眾心理 (FOMO)，將能提升購票按鈕的點擊率。
-* **Metric:** "Buy Now" Click-Through Rate (CTR)。
-* **Toggle Key:** `ENABLE_VIEWING_COUNT`
-
----
-
-## 🛡️ Security Implementation (DevSecOps)
-
-我們在開發生命週期中整合了以下安全措施：
-
-1.  **Authentication & Authorization (A&A)**
-    * 採用 **Auth0 / Firebase Auth** 進行 OAuth 2.0 身份驗證。
-    * JWT Token 驗證機制，確保 API 存取安全。
-
-2.  **Software Composition Analysis (SCA)**
-    * 啟用 **GitHub Dependabot** 自動掃描相依套件漏洞。
-    * 定期審查 `npm audit` 報告並修補高風險漏洞。
-
-3.  **Secret Management**
-    * **Development:** 使用 `.env` 檔案管理環境變數，並透過 `.gitignore` 排除。
-    * **Production:** 使用 **GitHub Actions Secrets** 注入敏感資訊 (DB Connection, API Keys)，嚴禁明文寫入程式碼。
-
----
-
-## 🛠️ Tech Stack & Architecture
-
-* **Frontend:** React.js / Next.js (Web Application)
-* **Backend:** Node.js (Express) / Python (FastAPI)
-* **Database:** PostgreSQL / MongoDB (Cloud Hosted)
-* **Auth:** Auth0 / Firebase Authentication
-* **DevOps Tools:** GitHub Actions (CI/CD), Dependabot (SCA), Vercel/Render (Deployment)
-
-### 📂 Project Structure
-
-```text
+```
 TixMaster/
-├── .github/
-│   ├── workflows/      # CI/CD Pipelines
-│   └── dependabot.yml  # SCA Configuration
-├── src/
-│   ├── components/     # UI Components (Login, Timer, TicketCard)
-│   ├── config/         # Feature Flags / Toggles logic
-│   ├── pages/          # Application Pages
-│   └── utils/          # Auth & Helper functions
-├── tests/              # Unit & Integration Tests
-├── .env.example        # Template for environment variables (No Secrets!)
-├── .gitignore          # Security rule: Ignore .env and node_modules
-├── package.json        # Dependencies
-└── README.md           # Project Documentation
+├── simple.html              # 🏠 首頁（活動列表）
+├── register.html            # 📝 使用者註冊頁面
+├── login.html               # 🔐 使用者登入頁面
+├── event-detail.html        # 🎤 活動詳情頁面（購票）
+├── database_schema.md       # 💾 資料庫設計文件
+└── README.md                # 📖 本文件
+```
+
+---
+
+## 🚀 快速開始
+
+### 方法一：直接開啟 HTML 檔案
+
+1. **瀏覽活動**
+   ```
+   雙擊開啟 simple.html
+   ```
+
+2. **註冊帳號**
+   ```
+   雙擊開啟 register.html
+   填寫：姓名、Email、手機、密碼
+   ```
+
+3. **登入系統**
+   ```
+   註冊成功後自動跳轉到 login.html
+   輸入 Email 和密碼登入
+   ```
+
+4. **查看活動詳情**
+   ```
+   雙擊開啟 event-detail.html
+   選擇票數、查看總價
+   ```
+
+### 方法二：使用瀏覽器開啟
+
+```bash
+# Windows
+start simple.html
+
+# Mac
+open simple.html
+
+# Linux
+xdg-open simple.html
+```
+
+---
+
+## 🎯 功能清單
+
+### ✅ 已完成功能
+
+#### 1. 使用者管理
+- [x] 註冊頁面（含表單驗證）
+  - Email 格式驗證
+  - 密碼長度檢查（至少 6 字元）
+  - 密碼確認功能
+  - 重複 Email 檢測
+- [x] 登入頁面
+  - Email + 密碼登入
+  - localStorage 驗證（模擬）
+
+#### 2. 活動展示
+- [x] 活動列表頁面
+  - 活動卡片展示
+  - 基本資訊（標題、日期、地點、價格）
+- [x] 活動詳情頁面
+  - Hero 大圖展示
+  - 完整活動資訊
+  - 觀看人數顯示（HDD 功能）
+  - 購票數量選擇器（+/-）
+  - 即時總價計算
+
+#### 3. 資料庫設計
+- [x] 8 個核心資料表
+  - `users` - 使用者
+  - `login_sessions` - 登入 Session
+  - `oauth_accounts` - 第三方登入
+  - `events` - 活動
+  - `tickets` - 票種
+  - `orders` - 訂單
+  - `order_items` - 訂單明細
+  - `waiting_queue` - 等待隊列
+  - `feature_flags` - 功能開關
+  - `analytics_events` - 分析數據
+
+### 🔜 待完成功能
+
+- [ ] 結帳頁面
+- [ ] 訂單確認
+- [ ] 後端 API 整合
+- [ ] 真實的資料庫連接
+- [ ] 付款系統整合
+
+---
+
+## 💾 資料庫設計
+
+詳細設計請查看 [`database_schema.md`](database_schema.md)
+
+### 核心資料表
+
+```
+users (使用者)
+├── id, email, password_hash (bcrypt)
+├── name, phone
+└── created_at, updated_at
+
+login_sessions (登入狀態)
+├── session_token, user_id
+├── ip_address, user_agent
+└── expires_at
+
+events (活動)
+├── title, description
+├── event_date, location
+└── image_url, status
+
+tickets (票種)
+├── event_id, ticket_type
+├── price, total_quantity
+└── available_quantity
+
+orders (訂單)
+├── order_number, user_id
+├── event_id, ticket_id
+├── quantity, total_amount
+└── status, payment_method
+```
+
+### 安全機制
+
+1. **密碼加密**
+   ```javascript
+   // 後端使用 bcrypt
+   const hashedPassword = await bcrypt.hash(password, 10);
+   ```
+
+2. **Session 管理**
+   - 唯一的 session_token
+   - 自動過期機制（24 小時或 7 天）
+
+3. **防超賣機制**
+   ```sql
+   -- 使用交易鎖定
+   BEGIN TRANSACTION;
+   SELECT available_quantity FROM tickets WHERE id = ? FOR UPDATE;
+   UPDATE tickets SET available_quantity = available_quantity - ?;
+   COMMIT;
+   ```
+
+---
+
+## 🔧 技術細節
+
+### 前端技術
+- **HTML5** - 語義化標籤
+- **CSS3** - 響應式設計、漸層效果
+- **JavaScript (ES6+)** - 表單驗證、DOM 操作
+
+### 資料儲存（目前）
+- **localStorage** - 模擬後端資料儲存
+- 等待外包廠商完成資料庫後，將所有 `localStorage` 呼叫改為 API
+
+### 表單驗證範例
+
+```javascript
+// Email 格式驗證
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+if (!emailRegex.test(email)) {
+  showError('請輸入有效的 Email');
+}
+
+// 密碼長度檢查
+if (password.length < 6) {
+  showError('密碼至少需要 6 個字元');
+}
+
+// 密碼確認
+if (password !== confirmPassword) {
+  showError('密碼不一致');
+}
+```
+
+---
+
+## 🎨 HDD 功能開關
+
+### 觀看人數顯示
+- **位置**：活動詳情頁
+- **功能**：顯示「X 人正在瀏覽此活動」
+- **目的**：利用社交證明 (Social Proof) 提升購票意願
+
+### 倒數計時器（規劃中）
+- **位置**：結帳頁面
+- **功能**：10 分鐘倒數計時
+- **目的**：製造急迫感，提升結帳完成率
+
+---
+
+## 📊 API 端點規劃
+
+待後端整合時實作：
+
+```
+POST   /api/register        # 使用者註冊
+POST   /api/login           # 使用者登入
+GET    /api/events          # 取得活動列表
+GET    /api/events/:id      # 取得活動詳情
+POST   /api/orders          # 建立訂單
+GET    /api/orders/:id      # 查詢訂單
+```
+
+---
+
+## 🔐 安全建議
+
+### 生產環境必須實作
+
+1. **HTTPS**
+   - 所有連線必須使用 SSL/TLS 加密
+
+2. **CSRF Protection**
+   - 使用 CSRF Token 防止跨站請求偽造
+
+3. **Rate Limiting**
+   - 限制 API 呼叫頻率，防止暴力破解
+
+4. **SQL Injection 防護**
+   - 使用 Prepared Statements
+   - 永不直接拼接 SQL 字串
+
+5. **XSS 防護**
+   - 所有使用者輸入需經過 HTML 轉義
+
+---
+
+## 📝 開發團隊
+
+| 角色 | 成員 | 職責 |
+|------|------|------|
+| **Project Manager** | YeMiao1026 | 專案管理、HDD 假設制定 |
+| **Full-Stack Developer** | Galin12341 | 前端開發、Feature Toggles |
+| **DB Manager / Ops** | Saisai568 | 資料庫設計、部署 |
+| **Tester** | ww123 | 測試、品質保證 |
+
+---
+
+## 📞 聯絡資訊
+
+有任何問題請聯繫專案團隊成員。
+
+---
+
+## 📜 授權
+
+本專案為 DevSecOps 課程作業，僅供教學使用。
+
+---
+
+## 🎉 下一步
+
+1. ✅ 完成前端頁面
+2. ⏳ 等待外包完成資料庫
+3. 🔜 串接後端 API
+4. 🔜 實作結帳流程
+5. 🔜 部署到雲端平台
+
+**目前進度：前端完成 ✅ | 資料庫設計完成 ✅**
