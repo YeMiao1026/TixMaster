@@ -4,6 +4,9 @@ const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const db = require('../config/database');
 const authenticateToken = require('../middleware/auth');
+const { checkRole, checkPermission } = require('../middleware/rbac');
+const { checkPolicy, policies } = require('../middleware/abac');
+const { ROLES } = require('../config/roles');
 
 // POST /api/users/register - 註冊新使用者
 router.post('/register', async (req, res, next) => {
@@ -18,10 +21,12 @@ router.post('/register', async (req, res, next) => {
         // Hash password
         const passwordHash = await bcrypt.hash(password, 10);
 
-        // Insert user
+        // Insert user with default role 'user' and empty attributes
         const result = await db.query(
-            'INSERT INTO users (email, password_hash, name, phone) VALUES ($1, $2, $3, $4) RETURNING id, email, name, phone, created_at',
-            [email, passwordHash, name, phone]
+            `INSERT INTO users (email, password_hash, name, phone, role, attributes) 
+             VALUES ($1, $2, $3, $4, $5, $6) 
+             RETURNING id, email, name, phone, role, created_at`,
+            [email, passwordHash, name, phone, ROLES.USER, {}]
         );
 
         res.status(201).json({
@@ -60,7 +65,11 @@ router.post('/login', async (req, res, next) => {
 
         // Generate JWT token
         const token = jwt.sign(
-            { userId: user.id, email: user.email },
+            {
+                userId: user.id,
+                email: user.email,
+                role: user.role || ROLES.USER // Include role in token
+            },
             process.env.JWT_SECRET,
             { expiresIn: '7d' }
         );
@@ -72,7 +81,8 @@ router.post('/login', async (req, res, next) => {
                 id: user.id,
                 email: user.email,
                 name: user.name,
-                phone: user.phone
+                phone: user.phone,
+                role: user.role
             }
         });
     } catch (err) {
@@ -81,10 +91,11 @@ router.post('/login', async (req, res, next) => {
 });
 
 // GET /api/users/profile - 取得使用者資料 (需認證)
+// ABAC: User can only view their own profile (implicit in logic, but explicit policy is better)
 router.get('/profile', authenticateToken, async (req, res, next) => {
     try {
         const result = await db.query(
-            'SELECT id, email, name, phone, created_at FROM users WHERE id = $1',
+            'SELECT id, email, name, phone, role, attributes, created_at FROM users WHERE id = $1',
             [req.user.userId]
         );
 
@@ -99,12 +110,13 @@ router.get('/profile', authenticateToken, async (req, res, next) => {
 });
 
 // PUT /api/users/profile - 更新使用者資料 (需認證)
-router.put('/profile', authenticateToken, async (req, res, next) => {
+// ABAC: User can only update their own profile
+router.put('/profile', authenticateToken, checkPolicy(policies.isOwner), async (req, res, next) => {
     try {
         const { name, phone } = req.body;
 
         const result = await db.query(
-            'UPDATE users SET name = $1, phone = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING id, email, name, phone',
+            'UPDATE users SET name = $1, phone = $2, updated_at = CURRENT_TIMESTAMP WHERE id = $3 RETURNING id, email, name, phone, role',
             [name, phone, req.user.userId]
         );
 
@@ -118,7 +130,7 @@ router.put('/profile', authenticateToken, async (req, res, next) => {
 });
 
 // POST /api/users/change-password - 修改密碼 (需認證)
-router.post('/change-password', authenticateToken, async (req, res, next) => {
+router.post('/change-password', authenticateToken, checkPolicy(policies.isOwner), async (req, res, next) => {
     try {
         const { currentPassword, newPassword } = req.body;
 
@@ -147,6 +159,19 @@ router.post('/change-password', authenticateToken, async (req, res, next) => {
         );
 
         res.json({ message: 'Password changed successfully' });
+    } catch (err) {
+        next(err);
+    }
+});
+
+// GET /api/users/all - 取得所有使用者 (Admin only)
+// RBAC: Only admin can access
+router.get('/all', authenticateToken, checkRole(ROLES.ADMIN), async (req, res, next) => {
+    try {
+        const result = await db.query(
+            'SELECT id, email, name, phone, role, created_at FROM users ORDER BY created_at DESC'
+        );
+        res.json({ users: result.rows });
     } catch (err) {
         next(err);
     }

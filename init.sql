@@ -12,6 +12,8 @@ CREATE TABLE users (
     password_hash VARCHAR(255) NOT NULL, -- 修正：這裡存放的是 Hash 值，非明文
     name VARCHAR(100) NOT NULL,
     phone VARCHAR(20),
+    role VARCHAR(50) DEFAULT 'user', -- RBAC 角色
+    attributes JSONB DEFAULT '{}',   -- ABAC 屬性
     created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
 );

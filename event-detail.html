@@ -191,6 +191,33 @@
             margin-right: 6px;
         }
 
+        /* Countdown Timer */
+        .countdown-timer {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .countdown-timer.active {
+            display: block;
+        }
+
+        .countdown-timer .timer-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .countdown-timer .timer-value {
+            font-size: 1.5rem;
+            font-family: 'Courier New', monospace;
+        }
+
         @media (max-width: 768px) {
             .content-grid {
                 grid-template-columns: 1fr;
@@ -249,6 +276,11 @@
                         </svg>
                         <span id="viewingCount">0</span> 人正在瀏覽
                     </div>
+
+                    <div class="countdown-timer" id="countdownTimer">
+                        <div class="timer-label">倒數計時</div>
+                        <div class="timer-value" id="timerValue">15:00</div>
+                    </div>
                 </div>
 
                 <div class="section">
@@ -279,6 +311,9 @@
             </div>
         </div>
     </div>
+
+    <!-- Load Feature Flags Service -->
+    <script src="featureFlags.js"></script>
 
     <script>
         // 從 URL 獲取活動 ID（這裡先寫死第一個活動）
@@ -317,22 +352,100 @@
 
         const event = events.find(e => e.id === eventId) || events[0];
         let quantity = 1;
+        let countdownInterval = null;
+        let remainingSeconds = 15 * 60; // 15 minutes
 
-        // 渲染頁面
-        document.getElementById('eventTitle').textContent = event.title + ' - TixMaster';
-        document.getElementById('heroImage').style.backgroundImage = `url(${event.image})`;
-        document.getElementById('heroTitle').textContent = event.title;
-        document.getElementById('heroInfo').textContent = `${new Date(event.date).toLocaleDateString('zh-TW')} • ${event.location}`;
-        document.getElementById('infoDate').textContent = new Date(event.date).toLocaleString('zh-TW');
-        document.getElementById('infoLocation').textContent = event.location;
-        document.getElementById('description').textContent = event.description;
-        document.getElementById('unitPrice').textContent = event.price;
-        document.getElementById('totalPrice').textContent = event.price;
+        // Initialize page
+        async function initPage() {
+            // Render basic page content
+            document.getElementById('eventTitle').textContent = event.title + ' - TixMaster';
+            document.getElementById('heroImage').style.backgroundImage = `url(${event.image})`;
+            document.getElementById('heroTitle').textContent = event.title;
+            document.getElementById('heroInfo').textContent = `${new Date(event.date).toLocaleDateString('zh-TW')} • ${event.location}`;
+            document.getElementById('infoDate').textContent = new Date(event.date).toLocaleString('zh-TW');
+            document.getElementById('infoLocation').textContent = event.location;
+            document.getElementById('description').textContent = event.description;
+            document.getElementById('unitPrice').textContent = event.price;
+            document.getElementById('totalPrice').textContent = event.price;
 
-        // 顯示觀看人數（模擬）
-        const viewingCount = Math.floor(Math.random() * 150) + 50;
-        document.getElementById('viewingBadge').style.display = 'inline-flex';
-        document.getElementById('viewingCount').textContent = viewingCount;
+            // Initialize feature flags
+            try {
+                await FeatureFlags.init();
+                console.log('[Event Detail] Feature flags loaded');
+
+                // Apply feature flags
+                applyFeatureFlags();
+            } catch (error) {
+                console.error('[Event Detail] Failed to load feature flags:', error);
+                // Fallback: show all features by default
+                showViewingCount();
+            }
+        }
+
+        // Apply feature flags to UI
+        function applyFeatureFlags() {
+            // Feature: Viewing Count Display
+            if (FeatureFlags.isEnabled('ENABLE_VIEWING_COUNT')) {
+                console.log('[Event Detail] Viewing count is ENABLED');
+                showViewingCount();
+            } else {
+                console.log('[Event Detail] Viewing count is DISABLED');
+                hideViewingCount();
+            }
+
+            // Feature: Checkout Timer
+            if (FeatureFlags.isEnabled('ENABLE_CHECKOUT_TIMER')) {
+                console.log('[Event Detail] Checkout timer is ENABLED');
+                startCountdownTimer();
+            } else {
+                console.log('[Event Detail] Checkout timer is DISABLED');
+                stopCountdownTimer();
+            }
+        }
+
+        // Show viewing count badge
+        function showViewingCount() {
+            const viewingCount = Math.floor(Math.random() * 150) + 50;
+            document.getElementById('viewingBadge').style.display = 'inline-flex';
+            document.getElementById('viewingCount').textContent = viewingCount;
+        }
+
+        // Hide viewing count badge
+        function hideViewingCount() {
+            document.getElementById('viewingBadge').style.display = 'none';
+        }
+
+        // Start countdown timer
+        function startCountdownTimer() {
+            const timerElement = document.getElementById('countdownTimer');
+            timerElement.classList.add('active');
+
+            // Update timer every second
+            countdownInterval = setInterval(() => {
+                remainingSeconds--;
+
+                if (remainingSeconds <= 0) {
+                    clearInterval(countdownInterval);
+                    document.getElementById('timerValue').textContent = '00:00';
+                    alert('訂票時間已結束，請重新進入頁面');
+                    return;
+                }
+
+                const minutes = Math.floor(remainingSeconds / 60);
+                const seconds = remainingSeconds % 60;
+                document.getElementById('timerValue').textContent =
+                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+            }, 1000);
+        }
+
+        // Stop countdown timer
+        function stopCountdownTimer() {
+            if (countdownInterval) {
+                clearInterval(countdownInterval);
+                countdownInterval = null;
+            }
+            document.getElementById('countdownTimer').classList.remove('active');
+        }
 
         // 數量調整
         function changeQuantity(delta) {
@@ -354,6 +467,14 @@
             // 實際應該導向結帳頁面
             // window.location.href = `checkout.html?eventId=${event.id}&quantity=${quantity}`;
         }
+
+        // Initialize page on load
+        initPage();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopCountdownTimer();
+        });
     </script>
 </body>
 
