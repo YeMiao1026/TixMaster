@@ -49,6 +49,22 @@ jobs:
         run: |
           echo "ADMIN_TOKEN=$(node tools/gen_admin_jwt.js)" >> $GITHUB_ENV
 
+      - name: Run npm audit (backend)
+        if: ${{ always() && (exists('package.json') || true) }}
+        run: |
+          mkdir -p reports
+          if [ -f package.json ]; then npm audit --production --json > reports/npm-audit-backend.json || true; else echo '{}' > reports/npm-audit-backend.json; fi
+
+      - name: Install Python audit tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety || true
+
+      - name: Run Python safety check (requirements-dev.txt)
+        run: |
+          mkdir -p reports
+          if [ -f requirements-dev.txt ]; then safety check --file=requirements-dev.txt --json > reports/safety-report.json || true; else echo '[]' > reports/safety-report.json; fi
+
       - name: Run pytest
         run: |
           mkdir -p reports
@@ -67,3 +83,5 @@ jobs:
             reports/playwright-report
             reports/test-report.html
             reports/tests-junit.xml
+            reports/npm-audit-backend.json
+            reports/safety-report.json

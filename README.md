@@ -314,6 +314,8 @@ GET    /api/orders/:id      # 查詢訂單
 
 - workflow 內會把 `JWT_SECRET` 寫入 `backend/.env`（當 secret 存在時），然後執行 `node tools/gen_admin_jwt.js` 並把輸出放入 `ADMIN_TOKEN` 環境變數，供 Playwright 與 pytest 使用。
 
+注意：`tools/gen_admin_jwt.js` 現在會優先使用環境變數 `JWT_SECRET`（例如 CI secrets），如果本地未提供，會回退到 `backend/.env` 中的 `JWT_SECRET`（若存在）。建議在 CI/自動化環境使用 `JWT_SECRET` secret，並在本機開發時透過環境變數或臨時 `backend/.env` 提供。
+
 查看報告：
 
 - Playwright HTML report：`reports/playwright-report/index.html`（或在 CI 用 `npx playwright show-report`）
