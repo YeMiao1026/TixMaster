@@ -312,7 +312,7 @@
         </div>
     </div>
 
-    <!-- Load Feature Flags Service -->
+    <!-- Load Feature Flags SDK -->
     <script src="featureFlags.js"></script>
 
     <script>
@@ -382,70 +382,81 @@
             }
         }
 
-        // Apply feature flags to UI
-        function applyFeatureFlags() {
-            // Feature: Viewing Count Display
-            if (FeatureFlags.isEnabled('ENABLE_VIEWING_COUNT')) {
-                console.log('[Event Detail] Viewing count is ENABLED');
-                showViewingCount();
-            } else {
-                console.log('[Event Detail] Viewing count is DISABLED');
-                hideViewingCount();
-            }
+        // 渲染頁面
+        document.getElementById('eventTitle').textContent = event.title + ' - TixMaster';
+        document.getElementById('heroImage').style.backgroundImage = `url(${event.image})`;
+        document.getElementById('heroTitle').textContent = event.title;
+        document.getElementById('heroInfo').textContent = `${new Date(event.date).toLocaleDateString('zh-TW')} • ${event.location}`;
+        document.getElementById('infoDate').textContent = new Date(event.date).toLocaleString('zh-TW');
+        document.getElementById('infoLocation').textContent = event.location;
+        document.getElementById('description').textContent = event.description;
+        document.getElementById('unitPrice').textContent = event.price;
+        document.getElementById('totalPrice').textContent = event.price;
 
-            // Feature: Checkout Timer
-            if (FeatureFlags.isEnabled('ENABLE_CHECKOUT_TIMER')) {
-                console.log('[Event Detail] Checkout timer is ENABLED');
-                startCountdownTimer();
-            } else {
-                console.log('[Event Detail] Checkout timer is DISABLED');
-                stopCountdownTimer();
-            }
+        // Session ID 生成（用於追蹤同一用戶的多個事件）
+        let sessionId = localStorage.getItem('analytics_session_id');
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('analytics_session_id', sessionId);
         }
 
-        // Show viewing count badge
-        function showViewingCount() {
-            const viewingCount = Math.floor(Math.random() * 150) + 50;
-            document.getElementById('viewingBadge').style.display = 'inline-flex';
-            document.getElementById('viewingCount').textContent = viewingCount;
-        }
+        // Analytics 追蹤
+        async function trackAnalytics(eventType, data) {
+            console.log('[Analytics]', eventType, data);
 
-        // Hide viewing count badge
-        function hideViewingCount() {
-            document.getElementById('viewingBadge').style.display = 'none';
-        }
+            try {
+                const response = await fetch('http://localhost:3000/api/analytics/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: null,
+                        sessionId: sessionId,
+                        eventType: eventType,
+                        eventData: data,
+                        featureFlagsSnapshot: FeatureFlags.getAll()
+                    })
+                });
 
-        // Start countdown timer
-        function startCountdownTimer() {
-            const timerElement = document.getElementById('countdownTimer');
-            timerElement.classList.add('active');
-
-            // Update timer every second
-            countdownInterval = setInterval(() => {
-                remainingSeconds--;
-
-                if (remainingSeconds <= 0) {
-                    clearInterval(countdownInterval);
-                    document.getElementById('timerValue').textContent = '00:00';
-                    alert('訂票時間已結束，請重新進入頁面');
-                    return;
+                if (response.ok) {
+                    console.log('[Analytics] Event tracked successfully:', eventType);
                 }
-
-                const minutes = Math.floor(remainingSeconds / 60);
-                const seconds = remainingSeconds % 60;
-                document.getElementById('timerValue').textContent =
-                    `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
-            }, 1000);
-        }
-
-        // Stop countdown timer
-        function stopCountdownTimer() {
-            if (countdownInterval) {
-                clearInterval(countdownInterval);
-                countdownInterval = null;
+            } catch (error) {
+                console.error('[Analytics] Error tracking event:', error);
             }
-            document.getElementById('countdownTimer').classList.remove('active');
         }
+
+        // 初始化頁面和 Feature Flags
+        async function initEventDetailPage() {
+            try {
+                await FeatureFlags.init();
+                console.log('[EventDetail] Feature flags initialized');
+
+                // 檢查是否啟用觀看人數顯示（Hypothesis 2: Social Proof）
+                if (FeatureFlags.isEnabled('ENABLE_VIEWING_COUNT')) {
+                    console.log('[EventDetail] Viewing count is ENABLED');
+                    const viewingCount = Math.floor(Math.random() * 150) + 50;
+                    document.getElementById('viewingBadge').style.display = 'inline-flex';
+                    document.getElementById('viewingCount').textContent = viewingCount;
+
+                    // 記錄 Analytics: 用戶看到了觀看人數
+                    await trackAnalytics('viewing_count_shown', {
+                        eventId,
+                        eventTitle: event.title,
+                        viewingCount
+                    });
+                } else {
+                    console.log('[EventDetail] Viewing count is DISABLED');
+                    document.getElementById('viewingBadge').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('[EventDetail] Failed to load feature flags:', error);
+                // 如果 Feature Flags 載入失敗，預設不顯示觀看人數
+                document.getElementById('viewingBadge').style.display = 'none';
+            }
+        }
+
+        // 執行初始化
+        initEventDetailPage();
 
         // 數量調整
         function changeQuantity(delta) {
@@ -462,10 +473,34 @@
             document.getElementById('totalPrice').textContent = total;
         }
 
-        function buyTickets() {
-            alert(`已選擇 ${quantity} 張票，總金額 NT$ ${event.price * quantity}\n即將前往結帳...`);
-            // 實際應該導向結帳頁面
-            // window.location.href = `checkout.html?eventId=${event.id}&quantity=${quantity}`;
+        async function buyTickets() {
+            try {
+                // 確保 Feature Flags 已初始化
+                if (!FeatureFlags || typeof FeatureFlags.isEnabled !== 'function') {
+                    console.warn('[BuyTickets] FeatureFlags not initialized, proceeding anyway');
+                    window.location.href = `checkout.html?eventId=${event.id}&quantity=${quantity}`;
+                    return;
+                }
+
+                // 記錄 Analytics: "Buy Now" 點擊 (Hypothesis 2: Social Proof)
+                const hasViewingCount = FeatureFlags.isEnabled('ENABLE_VIEWING_COUNT');
+                console.log('[BuyTickets] Buy button clicked, viewing count enabled:', hasViewingCount);
+
+                // 發送 Analytics 事件
+                await trackAnalytics('buy_now_clicked', {
+                    eventId: event.id,
+                    eventTitle: event.title,
+                    quantity,
+                    viewingCountShown: hasViewingCount
+                });
+
+                // 導向結帳頁面
+                window.location.href = `checkout.html?eventId=${event.id}&quantity=${quantity}`;
+            } catch (error) {
+                console.error('[BuyTickets] Error:', error);
+                // 即使出錯也要導向結帳頁面
+                window.location.href = `checkout.html?eventId=${event.id}&quantity=${quantity}`;
+            }
         }
 
         // Initialize page on load

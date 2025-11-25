@@ -124,24 +124,35 @@ const FeatureFlags = (() => {
      */
     async function updateFlag(key, enabled) {
         try {
+            // Ensure enabled is a boolean
+            const booleanEnabled = Boolean(enabled);
+
+            console.log(`[FeatureFlags] Updating ${key} to ${booleanEnabled} (type: ${typeof booleanEnabled})`);
+
+            const requestBody = { enabled: booleanEnabled };
+            console.log('[FeatureFlags] Request body:', JSON.stringify(requestBody));
+
             const response = await fetch(`${API_BASE_URL}/feature-flags/${key}`, {
                 method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ enabled })
+                body: JSON.stringify(requestBody)
             });
 
             if (!response.ok) {
+                const errorText = await response.text();
+                console.error('[FeatureFlags] Server error response:', errorText);
                 throw new Error(`HTTP ${response.status}: ${response.statusText}`);
             }
 
             const data = await response.json();
+            console.log('[FeatureFlags] Server response:', data);
 
             // Update local cache
             await refresh();
 
-            console.log(`[FeatureFlags] Updated ${key} to ${enabled}`);
+            console.log(`[FeatureFlags] Successfully updated ${key} to ${booleanEnabled}`);
             return data;
         } catch (error) {
             console.error('[FeatureFlags] Failed to update flag:', error);
