@@ -191,6 +191,33 @@
             margin-right: 6px;
         }
 
+        /* Countdown Timer */
+        .countdown-timer {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin-top: 15px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .countdown-timer.active {
+            display: block;
+        }
+
+        .countdown-timer .timer-label {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 5px;
+        }
+
+        .countdown-timer .timer-value {
+            font-size: 1.5rem;
+            font-family: 'Courier New', monospace;
+        }
+
         @media (max-width: 768px) {
             .content-grid {
                 grid-template-columns: 1fr;
@@ -248,6 +275,11 @@
                                 clip-rule="evenodd" />
                         </svg>
                         <span id="viewingCount">0</span> 人正在瀏覽
+                    </div>
+
+                    <div class="countdown-timer" id="countdownTimer">
+                        <div class="timer-label">倒數計時</div>
+                        <div class="timer-value" id="timerValue">15:00</div>
                     </div>
                 </div>
 
@@ -320,6 +352,35 @@
 
         const event = events.find(e => e.id === eventId) || events[0];
         let quantity = 1;
+        let countdownInterval = null;
+        let remainingSeconds = 15 * 60; // 15 minutes
+
+        // Initialize page
+        async function initPage() {
+            // Render basic page content
+            document.getElementById('eventTitle').textContent = event.title + ' - TixMaster';
+            document.getElementById('heroImage').style.backgroundImage = `url(${event.image})`;
+            document.getElementById('heroTitle').textContent = event.title;
+            document.getElementById('heroInfo').textContent = `${new Date(event.date).toLocaleDateString('zh-TW')} • ${event.location}`;
+            document.getElementById('infoDate').textContent = new Date(event.date).toLocaleString('zh-TW');
+            document.getElementById('infoLocation').textContent = event.location;
+            document.getElementById('description').textContent = event.description;
+            document.getElementById('unitPrice').textContent = event.price;
+            document.getElementById('totalPrice').textContent = event.price;
+
+            // Initialize feature flags
+            try {
+                await FeatureFlags.init();
+                console.log('[Event Detail] Feature flags loaded');
+
+                // Apply feature flags
+                applyFeatureFlags();
+            } catch (error) {
+                console.error('[Event Detail] Failed to load feature flags:', error);
+                // Fallback: show all features by default
+                showViewingCount();
+            }
+        }
 
         // 渲染頁面
         document.getElementById('eventTitle').textContent = event.title + ' - TixMaster';
@@ -441,6 +502,14 @@
                 window.location.href = `checkout.html?eventId=${event.id}&quantity=${quantity}`;
             }
         }
+
+        // Initialize page on load
+        initPage();
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            stopCountdownTimer();
+        });
     </script>
 </body>
 
