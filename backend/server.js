@@ -6,6 +6,8 @@ const passport = require('./config/passport');  // NEW - Passport 設定
 
 const errorHandler = require('./middleware/errorHandler');
 const featureFlagsMiddleware = require('./middleware/featureFlags');
+const path = require('path');
+const fs = require('fs');
 
 // Import routes
 const usersRouter = require('./routes/users');
@@ -114,12 +116,63 @@ app.use('/api/feature-flags', featureFlagsRouter);
 app.use('/api/analytics', analyticsRouter);
 
 /**
- * 📄 靜態檔案服務（選用）
- * 
- * 如果你想直接從後端服務前端 HTML 檔案
- * 取消下面這行的註解：
+ * 📄 靜態檔案服務
+ *
+ * 原本程式使用相對路徑 express.static('../')，在不同平台或
+ * Docker 工作目錄下可能找不到靜態檔案，導致回傳 404 JSON
+ * ("Endpoint not found").這裡改為使用絕對路徑並加上容錯處理：
+ * - 以 backend 的 __dirname 向上尋找 repo root
+ * - 若找不到靜態資料夾或 index.html，會在 logs 顯示警告
  */
-app.use(express.static('../'));  // 提供根目錄的靜態檔案
+// Try to locate a static directory that contains index.html. Different
+// deployment environments (Railway/Render/Docker) may place the repo at
+// different working directories, so probe several likely candidates.
+const candidates = [
+    path.join(__dirname, '..'),           // repo root relative to backend
+    path.join(__dirname, '..', 'public'), // repo root / public
+    path.join(__dirname, 'public'),       // backend/public
+    path.join(process.cwd(), '..'),       // parent of current cwd
+    path.join(process.cwd(), '.'),        // current working dir
+    path.resolve('/workspace'),           // some CI use /workspace
+    path.resolve('/')                     // fallback to root
+];
+
+let chosenStatic = null;
+for (const c of candidates) {
+    try {
+        const idx = path.join(c, 'index.html');
+        if (fs.existsSync(idx)) {
+            chosenStatic = c;
+            console.log(`[static] Found index.html in ${c}`);
+            break;
+        }
+    } catch (e) {
+        // ignore inaccessible paths
+    }
+}
+
+if (chosenStatic) {
+    console.log(`[static] Serving static files from ${chosenStatic}`);
+    app.use(express.static(chosenStatic));
+} else {
+    console.warn('[static] Warning: could not locate index.html in any candidate paths.');
+    console.warn('[static] Candidates checked:', candidates.join(', '));
+}
+
+// Fallback: for non-API and non-auth routes, serve index.html if present in chosenStatic
+app.use((req, res, next) => {
+    if (req.path.startsWith('/api') || req.path.startsWith('/auth')) return next();
+
+    if (chosenStatic) {
+        const indexFile = path.join(chosenStatic, 'index.html');
+        if (fs.existsSync(indexFile)) {
+            return res.sendFile(indexFile);
+        }
+    }
+
+    // No index.html found — continue to next handler which will return JSON 404
+    return next();
+});
 
 /**
  * ❌ 404 處理
