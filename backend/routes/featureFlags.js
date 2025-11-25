@@ -62,9 +62,20 @@ router.put('/:key', authenticateToken, checkPermission(PERMISSIONS.MANAGE_FEATUR
         const { key } = req.params;
         const { enabled } = req.body;
 
+        console.log(`[FeatureFlags API] PUT /${key}`);
+        console.log(`[FeatureFlags API] Request body:`, req.body);
+        console.log(`[FeatureFlags API] enabled value: ${enabled} (type: ${typeof enabled})`);
+
         if (typeof enabled !== 'boolean') {
-            return res.status(400).json({ error: 'enabled must be a boolean value' });
+            console.error(`[FeatureFlags API] Invalid type for enabled: ${typeof enabled}`);
+            return res.status(400).json({
+                error: 'enabled must be a boolean value',
+                received: typeof enabled,
+                value: enabled
+            });
         }
+
+        console.log(`[FeatureFlags API] Updating ${key} to ${enabled} in database`);
 
         const result = await db.query(
             'UPDATE feature_flags SET flag_value = $1, updated_at = CURRENT_TIMESTAMP WHERE flag_key = $2 RETURNING *',
@@ -72,18 +83,24 @@ router.put('/:key', authenticateToken, checkPermission(PERMISSIONS.MANAGE_FEATUR
         );
 
         if (result.rows.length === 0) {
+            console.error(`[FeatureFlags API] Flag not found: ${key}`);
             return res.status(404).json({ error: 'Feature flag not found' });
         }
 
-        res.json({
+        const updatedFlag = {
             message: 'Feature flag updated',
             flag: {
                 key: result.rows[0].flag_key,
                 enabled: result.rows[0].flag_value,
                 description: result.rows[0].description
             }
-        });
+        };
+
+        console.log(`[FeatureFlags API] Successfully updated ${key}:`, updatedFlag);
+
+        res.json(updatedFlag);
     } catch (err) {
+        console.error(`[FeatureFlags API] Error:`, err);
         next(err);
     }
 });

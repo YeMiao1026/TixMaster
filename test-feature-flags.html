@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Feature Flags 測試頁面</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+        }
+        .test-section h2 {
+            margin-top: 0;
+            color: #2563eb;
+        }
+        button {
+            background: #2563eb;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background: #1e40af;
+        }
+        button.danger {
+            background: #dc2626;
+        }
+        button.danger:hover {
+            background: #b91c1c;
+        }
+        .output {
+            background: #f9fafb;
+            border: 1px solid #e5e7eb;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            margin-left: 10px;
+        }
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚩 Feature Flags 測試頁面</h1>
+
+        <div class="test-section">
+            <h2>1. 連線測試</h2>
+            <button onclick="testConnection()">測試後端連線</button>
+            <button onclick="testHealthEndpoint()">測試 Health Endpoint</button>
+            <div id="connectionOutput" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>2. 讀取功能開關</h2>
+            <button onclick="testGetAllFlags()">取得所有功能開關</button>
+            <button onclick="testGetCheckoutTimer()">取得 CHECKOUT_TIMER</button>
+            <button onclick="testGetViewingCount()">取得 VIEWING_COUNT</button>
+            <div id="getFlagsOutput" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>3. 更新功能開關</h2>
+            <button onclick="testToggleCheckoutTimer(true)">啟用 CHECKOUT_TIMER</button>
+            <button onclick="testToggleCheckoutTimer(false)" class="danger">停用 CHECKOUT_TIMER</button>
+            <button onclick="testToggleViewingCount(true)">啟用 VIEWING_COUNT</button>
+            <button onclick="testToggleViewingCount(false)" class="danger">停用 VIEWING_COUNT</button>
+            <div id="updateFlagsOutput" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>4. Feature Flags SDK 測試</h2>
+            <button onclick="testSDKInit()">初始化 SDK</button>
+            <button onclick="testSDKIsEnabled()">測試 isEnabled()</button>
+            <button onclick="testSDKGetAll()">測試 getAll()</button>
+            <button onclick="testSDKClearCache()">清除快取</button>
+            <div id="sdkOutput" class="output"></div>
+        </div>
+
+        <div class="test-section">
+            <h2>5. 控制台日誌</h2>
+            <p>請打開瀏覽器的開發者工具 (F12) 查看詳細的日誌輸出</p>
+            <button onclick="window.location.reload()">重新載入頁面</button>
+        </div>
+    </div>
+
+    <script src="featureFlags.js"></script>
+    <script>
+        const API_BASE = 'http://localhost:3000';
+
+        function log(elementId, message, isError = false) {
+            const element = document.getElementById(elementId);
+            const timestamp = new Date().toLocaleTimeString('zh-TW');
+            const status = isError ? '<span class="status error">ERROR</span>' : '<span class="status success">OK</span>';
+            element.innerHTML = `[${timestamp}] ${status}\n${message}\n\n` + element.innerHTML;
+        }
+
+        // 1. 連線測試
+        async function testConnection() {
+            try {
+                const response = await fetch(`${API_BASE}/api/feature-flags`);
+                const data = await response.json();
+                log('connectionOutput', `連線成功！\n${JSON.stringify(data, null, 2)}`);
+                console.log('Connection test result:', data);
+            } catch (error) {
+                log('connectionOutput', `連線失敗: ${error.message}`, true);
+                console.error('Connection test failed:', error);
+            }
+        }
+
+        async function testHealthEndpoint() {
+            try {
+                const response = await fetch(`${API_BASE}/health`);
+                const data = await response.json();
+                log('connectionOutput', `Health OK!\n${JSON.stringify(data, null, 2)}`);
+                console.log('Health check result:', data);
+            } catch (error) {
+                log('connectionOutput', `Health 檢查失敗: ${error.message}`, true);
+                console.error('Health check failed:', error);
+            }
+        }
+
+        // 2. 讀取功能開關
+        async function testGetAllFlags() {
+            try {
+                const response = await fetch(`${API_BASE}/api/feature-flags`);
+                const data = await response.json();
+                log('getFlagsOutput', `取得所有功能開關:\n${JSON.stringify(data, null, 2)}`);
+                console.log('All flags:', data);
+            } catch (error) {
+                log('getFlagsOutput', `讀取失敗: ${error.message}`, true);
+                console.error('Get flags failed:', error);
+            }
+        }
+
+        async function testGetCheckoutTimer() {
+            try {
+                const response = await fetch(`${API_BASE}/api/feature-flags/ENABLE_CHECKOUT_TIMER`);
+                const data = await response.json();
+                log('getFlagsOutput', `CHECKOUT_TIMER 狀態:\n${JSON.stringify(data, null, 2)}`);
+                console.log('Checkout timer flag:', data);
+            } catch (error) {
+                log('getFlagsOutput', `讀取失敗: ${error.message}`, true);
+                console.error('Get checkout timer failed:', error);
+            }
+        }
+
+        async function testGetViewingCount() {
+            try {
+                const response = await fetch(`${API_BASE}/api/feature-flags/ENABLE_VIEWING_COUNT`);
+                const data = await response.json();
+                log('getFlagsOutput', `VIEWING_COUNT 狀態:\n${JSON.stringify(data, null, 2)}`);
+                console.log('Viewing count flag:', data);
+            } catch (error) {
+                log('getFlagsOutput', `讀取失敗: ${error.message}`, true);
+                console.error('Get viewing count failed:', error);
+            }
+        }
+
+        // 3. 更新功能開關
+        async function testToggleCheckoutTimer(enabled) {
+            try {
+                console.log(`Toggling CHECKOUT_TIMER to ${enabled} (type: ${typeof enabled})`);
+                const response = await fetch(`${API_BASE}/api/feature-flags/ENABLE_CHECKOUT_TIMER`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ enabled })
+                });
+                const data = await response.json();
+                log('updateFlagsOutput', `CHECKOUT_TIMER 已${enabled ? '啟用' : '停用'}:\n${JSON.stringify(data, null, 2)}`);
+                console.log('Toggle result:', data);
+            } catch (error) {
+                log('updateFlagsOutput', `更新失敗: ${error.message}`, true);
+                console.error('Toggle failed:', error);
+            }
+        }
+
+        async function testToggleViewingCount(enabled) {
+            try {
+                console.log(`Toggling VIEWING_COUNT to ${enabled} (type: ${typeof enabled})`);
+                const response = await fetch(`${API_BASE}/api/feature-flags/ENABLE_VIEWING_COUNT`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ enabled })
+                });
+                const data = await response.json();
+                log('updateFlagsOutput', `VIEWING_COUNT 已${enabled ? '啟用' : '停用'}:\n${JSON.stringify(data, null, 2)}`);
+                console.log('Toggle result:', data);
+            } catch (error) {
+                log('updateFlagsOutput', `更新失敗: ${error.message}`, true);
+                console.error('Toggle failed:', error);
+            }
+        }
+
+        // 4. SDK 測試
+        async function testSDKInit() {
+            try {
+                await FeatureFlags.init();
+                log('sdkOutput', 'SDK 初始化成功！');
+                console.log('SDK initialized');
+            } catch (error) {
+                log('sdkOutput', `SDK 初始化失敗: ${error.message}`, true);
+                console.error('SDK init failed:', error);
+            }
+        }
+
+        async function testSDKIsEnabled() {
+            try {
+                await FeatureFlags.init();
+                const checkoutTimer = FeatureFlags.isEnabled('ENABLE_CHECKOUT_TIMER');
+                const viewingCount = FeatureFlags.isEnabled('ENABLE_VIEWING_COUNT');
+                log('sdkOutput', `isEnabled() 測試:\n- CHECKOUT_TIMER: ${checkoutTimer}\n- VIEWING_COUNT: ${viewingCount}`);
+                console.log('isEnabled results:', { checkoutTimer, viewingCount });
+            } catch (error) {
+                log('sdkOutput', `測試失敗: ${error.message}`, true);
+                console.error('isEnabled test failed:', error);
+            }
+        }
+
+        async function testSDKGetAll() {
+            try {
+                await FeatureFlags.init();
+                const allFlags = FeatureFlags.getAll();
+                log('sdkOutput', `getAll() 測試:\n${JSON.stringify(allFlags, null, 2)}`);
+                console.log('All flags from SDK:', allFlags);
+            } catch (error) {
+                log('sdkOutput', `測試失敗: ${error.message}`, true);
+                console.error('getAll test failed:', error);
+            }
+        }
+
+        function testSDKClearCache() {
+            try {
+                FeatureFlags.clearCache();
+                log('sdkOutput', '快取已清除！請重新初始化 SDK。');
+                console.log('Cache cleared');
+            } catch (error) {
+                log('sdkOutput', `清除快取失敗: ${error.message}`, true);
+                console.error('Clear cache failed:', error);
+            }
+        }
+
+        // 頁面載入時顯示說明
+        window.addEventListener('load', () => {
+            console.log('%c🚩 Feature Flags 測試頁面', 'font-size: 20px; color: #2563eb; font-weight: bold;');
+            console.log('請使用頁面上的按鈕進行測試，所有詳細日誌都會顯示在這裡。');
+            console.log('後端 API: http://localhost:3000');
+        });
+    </script>
+</body>
+</html>

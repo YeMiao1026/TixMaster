@@ -383,6 +383,7 @@
             try {
                 await FeatureFlags.init();
                 const flags = FeatureFlags.getAll();
+                console.log('[LoadFlags] Loaded flags:', flags);
 
                 const featureFlagsBody = document.getElementById('featureFlagsBody');
                 const flagKeys = Object.keys(flags);
@@ -394,7 +395,11 @@
 
                 featureFlagsBody.innerHTML = flagKeys.map(key => {
                     const flag = flags[key];
+                    // 確保 enabled 是 boolean
+                    const isEnabled = Boolean(flag.enabled);
                     const updatedTime = flag.updatedAt ? new Date(flag.updatedAt).toLocaleString('zh-TW') : '-';
+
+                    console.log(`[LoadFlags] ${key}: enabled=${flag.enabled} (type: ${typeof flag.enabled}), isEnabled=${isEnabled}`);
 
                     return `
                         <tr>
@@ -406,12 +411,12 @@
                             <td>
                                 <label class="toggle-switch">
                                     <input type="checkbox"
-                                           ${flag.enabled ? 'checked' : ''}
+                                           ${isEnabled ? 'checked' : ''}
                                            onchange="toggleFeatureFlag('${key}', this.checked)">
                                     <span class="toggle-slider"></span>
                                 </label>
-                                <span style="margin-left: 10px; font-weight: 600; color: ${flag.enabled ? '#10b981' : '#6b7280'}">
-                                    ${flag.enabled ? '已啟用' : '已停用'}
+                                <span style="margin-left: 10px; font-weight: 600; color: ${isEnabled ? '#10b981' : '#6b7280'}">
+                                    ${isEnabled ? '已啟用' : '已停用'}
                                 </span>
                             </td>
                             <td>${updatedTime}</td>
@@ -419,7 +424,7 @@
                     `;
                 }).join('');
             } catch (error) {
-                console.error('Failed to load feature flags:', error);
+                console.error('[LoadFlags] Failed to load feature flags:', error);
                 document.getElementById('featureFlagsBody').innerHTML =
                     '<tr><td colspan="4" class="empty-state" style="color: #ef4444;">載入失敗：無法連接到後端伺服器</td></tr>';
             }
@@ -427,17 +432,23 @@
 
         // 切換 Feature Flag
         async function toggleFeatureFlag(key, enabled) {
+            console.log(`[Toggle] Attempting to toggle ${key} to ${enabled} (type: ${typeof enabled})`);
+
             try {
-                await FeatureFlags.updateFlag(key, enabled);
-                console.log(`Feature flag ${key} updated to ${enabled}`);
+                // 確保 enabled 是 boolean
+                const booleanEnabled = Boolean(enabled);
+                console.log(`[Toggle] Converted to boolean: ${booleanEnabled}`);
+
+                const result = await FeatureFlags.updateFlag(key, booleanEnabled);
+                console.log(`[Toggle] Update result:`, result);
 
                 // 重新載入 Feature Flags
                 await loadFeatureFlags();
 
                 // 顯示成功訊息
-                alert(`功能開關 "${key}" 已${enabled ? '啟用' : '停用'}`);
+                alert(`功能開關 "${key}" 已${booleanEnabled ? '啟用' : '停用'}`);
             } catch (error) {
-                console.error('Failed to update feature flag:', error);
+                console.error('[Toggle] Failed to update feature flag:', error);
                 alert(`更新失敗: ${error.message}`);
 
                 // 重新載入以恢復原狀
