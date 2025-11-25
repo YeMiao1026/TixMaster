@@ -39,10 +39,15 @@ jobs:
           npx playwright install --with-deps
 
       - name: Create backend .env from secret (optional)
-        if: ${{ secrets.JWT_SECRET != '' }}
         run: |
-          mkdir -p backend
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" > backend/.env
+          # If JWT_SECRET is provided as a secret, write it into backend/.env
+          if [ -n "${{ secrets.JWT_SECRET }}" ]; then
+            mkdir -p backend
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" > backend/.env
+            echo "Wrote backend/.env from secret"
+          else
+            echo "JWT_SECRET secret not set; skipping backend/.env creation"
+          fi
 
       - name: Generate admin JWT and export as env
         id: gen_token
@@ -50,10 +55,13 @@ jobs:
           echo "ADMIN_TOKEN=$(node tools/gen_admin_jwt.js)" >> $GITHUB_ENV
 
       - name: Run npm audit (backend)
-        if: ${{ always() && (exists('package.json') || true) }}
         run: |
           mkdir -p reports
-          if [ -f package.json ]; then npm audit --production --json > reports/npm-audit-backend.json || true; else echo '{}' > reports/npm-audit-backend.json; fi
+          if [ -f package.json ]; then
+            npm audit --production --json > reports/npm-audit-backend.json || true
+          else
+            echo '{}' > reports/npm-audit-backend.json
+          fi
 
       - name: Install Python audit tools
         run: |
