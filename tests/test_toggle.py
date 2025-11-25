@@ -28,11 +28,16 @@ def test_update_with_admin_token(base_url, admin_token):
     if not admin_token:
         pytest.skip('ADMIN_TOKEN not set; skipping authenticated update test')
     headers = {'Authorization': f"Bearer {admin_token}"}
+    # 使用已存在的 flag（schema 預設有 ENABLE_CHECKOUT_TIMER）避免 404
+    flag_key = 'ENABLE_CHECKOUT_TIMER'
     payload = {'enabled': True}
-    r = requests.put(f"{base_url}/api/feature-flags/some_flag", json=payload, headers=headers, timeout=5)
+    r = requests.put(f"{base_url}/api/feature-flags/{flag_key}", json=payload, headers=headers, timeout=5)
     assert r.status_code == 200
     j = r.json()
-    assert 'flag' in j
+    # 支援不同回傳格式
+    flag_data = j.get('flag') if isinstance(j, dict) and 'flag' in j else j
+    assert isinstance(flag_data, dict)
+    assert 'enabled' in flag_data
 
 
 def test_get_flag_structure(base_url):
