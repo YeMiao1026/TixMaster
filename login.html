@@ -177,9 +177,9 @@
             document.body.querySelector('.login-container').classList.add('redirecting');
             document.getElementById('loginBtn').style.display = 'none';
 
-            // 導向到後端 OAuth 登入路由
+            // 導向到後端 OAuth 登入路由（使用相對路徑，會導向同一個 host）
             setTimeout(() => {
-                window.location.href = `${API_BASE_URL}/auth/login`;
+                window.location.href = '/auth/login';
             }, 500);
         }
 
@@ -190,8 +190,8 @@
             const token = params.get('token');
 
             if (token) {
-                // 儲存 token
-                localStorage.setItem('authToken', token);
+                // 儲存 token（統一使用 'token' key）
+                localStorage.setItem('token', token);
 
                 // 顯示成功訊息
                 document.getElementById('successMessage').classList.add('show');
@@ -204,7 +204,8 @@
                     localStorage.setItem('currentUser', JSON.stringify({
                         id: payload.userId,
                         email: payload.email,
-                        role: payload.role
+                        role: payload.role,
+                        token: token
                     }));
 
                     // 3 秒後導向首頁

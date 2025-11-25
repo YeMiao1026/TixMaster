@@ -12,7 +12,8 @@
  */
 
 const FeatureFlags = (() => {
-    const API_BASE_URL = 'http://localhost:3000/api';
+    // Use relative API path so front-end works on any host (localhost or deployed)
+    const API_BASE_URL = '/api';
     const CACHE_KEY = 'tixmaster_feature_flags';
     const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
 
@@ -132,9 +133,11 @@ const FeatureFlags = (() => {
             const requestBody = { enabled: booleanEnabled };
             console.log('[FeatureFlags] Request body:', JSON.stringify(requestBody));
 
-            // Get admin token from localStorage
+            // Get token from possible storage keys for compatibility
             const adminUser = JSON.parse(localStorage.getItem('adminUser') || 'null');
-            const token = adminUser ? adminUser.token : null;
+            const currentUser = JSON.parse(localStorage.getItem('currentUser') || 'null');
+            const tokenFromKey = localStorage.getItem('token');
+            const token = tokenFromKey || (currentUser && currentUser.token) || (adminUser && adminUser.token) || null;
 
             if (!token) {
                 throw new Error('管理員未登入或 token 已過期');
