@@ -137,16 +137,14 @@
     </div>
 
     <script>
-        const API_BASE_URL = 'http://localhost:3000';
-
         function startOAuth() {
             document.getElementById('message').textContent = '正在導向 Auth0 註冊頁面...';
             document.body.querySelector('.register-container').classList.add('redirecting');
             document.getElementById('registerBtn').style.display = 'none';
 
-            // 導向到後端 OAuth 註冊路由
+            // 導向到後端 OAuth 註冊路由（相對路徑）
             setTimeout(() => {
-                window.location.href = `${API_BASE_URL}/auth/signup`;
+                window.location.href = '/auth/signup';
             }, 500);
         }
 
