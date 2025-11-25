@@ -280,6 +280,9 @@
         </div>
     </div>
 
+    <!-- Load Feature Flags SDK -->
+    <script src="featureFlags.js"></script>
+
     <script>
         // 從 URL 獲取活動 ID（這裡先寫死第一個活動）
         const eventId = new URLSearchParams(window.location.search).get('id') || '1';
@@ -329,10 +332,70 @@
         document.getElementById('unitPrice').textContent = event.price;
         document.getElementById('totalPrice').textContent = event.price;
 
-        // 顯示觀看人數（模擬）
-        const viewingCount = Math.floor(Math.random() * 150) + 50;
-        document.getElementById('viewingBadge').style.display = 'inline-flex';
-        document.getElementById('viewingCount').textContent = viewingCount;
+        // Session ID 生成（用於追蹤同一用戶的多個事件）
+        let sessionId = localStorage.getItem('analytics_session_id');
+        if (!sessionId) {
+            sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            localStorage.setItem('analytics_session_id', sessionId);
+        }
+
+        // Analytics 追蹤
+        async function trackAnalytics(eventType, data) {
+            console.log('[Analytics]', eventType, data);
+
+            try {
+                const response = await fetch('http://localhost:3000/api/analytics/event', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        userId: null,
+                        sessionId: sessionId,
+                        eventType: eventType,
+                        eventData: data,
+                        featureFlagsSnapshot: FeatureFlags.getAll()
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('[Analytics] Event tracked successfully:', eventType);
+                }
+            } catch (error) {
+                console.error('[Analytics] Error tracking event:', error);
+            }
+        }
+
+        // 初始化頁面和 Feature Flags
+        async function initEventDetailPage() {
+            try {
+                await FeatureFlags.init();
+                console.log('[EventDetail] Feature flags initialized');
+
+                // 檢查是否啟用觀看人數顯示（Hypothesis 2: Social Proof）
+                if (FeatureFlags.isEnabled('ENABLE_VIEWING_COUNT')) {
+                    console.log('[EventDetail] Viewing count is ENABLED');
+                    const viewingCount = Math.floor(Math.random() * 150) + 50;
+                    document.getElementById('viewingBadge').style.display = 'inline-flex';
+                    document.getElementById('viewingCount').textContent = viewingCount;
+
+                    // 記錄 Analytics: 用戶看到了觀看人數
+                    await trackAnalytics('viewing_count_shown', {
+                        eventId,
+                        eventTitle: event.title,
+                        viewingCount
+                    });
+                } else {
+                    console.log('[EventDetail] Viewing count is DISABLED');
+                    document.getElementById('viewingBadge').style.display = 'none';
+                }
+            } catch (error) {
+                console.error('[EventDetail] Failed to load feature flags:', error);
+                // 如果 Feature Flags 載入失敗，預設不顯示觀看人數
+                document.getElementById('viewingBadge').style.display = 'none';
+            }
+        }
+
+        // 執行初始化
+        initEventDetailPage();
 
         // 數量調整
         function changeQuantity(delta) {
@@ -349,10 +412,34 @@
             document.getElementById('totalPrice').textContent = total;
         }
 
-        function buyTickets() {
-            alert(`已選擇 ${quantity} 張票，總金額 NT$ ${event.price * quantity}\n即將前往結帳...`);
-            // 實際應該導向結帳頁面
-            // window.location.href = `checkout.html?eventId=${event.id}&quantity=${quantity}`;
+        async function buyTickets() {
+            try {
+                // 確保 Feature Flags 已初始化
+                if (!FeatureFlags || typeof FeatureFlags.isEnabled !== 'function') {
+                    console.warn('[BuyTickets] FeatureFlags not initialized, proceeding anyway');
+                    window.location.href = `checkout.html?eventId=${event.id}&quantity=${quantity}`;
+                    return;
+                }
+
+                // 記錄 Analytics: "Buy Now" 點擊 (Hypothesis 2: Social Proof)
+                const hasViewingCount = FeatureFlags.isEnabled('ENABLE_VIEWING_COUNT');
+                console.log('[BuyTickets] Buy button clicked, viewing count enabled:', hasViewingCount);
+
+                // 發送 Analytics 事件
+                await trackAnalytics('buy_now_clicked', {
+                    eventId: event.id,
+                    eventTitle: event.title,
+                    quantity,
+                    viewingCountShown: hasViewingCount
+                });
+
+                // 導向結帳頁面
+                window.location.href = `checkout.html?eventId=${event.id}&quantity=${quantity}`;
+            } catch (error) {
+                console.error('[BuyTickets] Error:', error);
+                // 即使出錯也要導向結帳頁面
+                window.location.href = `checkout.html?eventId=${event.id}&quantity=${quantity}`;
+            }
         }
     </script>
 </body>
