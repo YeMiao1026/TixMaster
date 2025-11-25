@@ -1,0 +1,17 @@
+
+> tixmaster-backend@1.0.0 start
+> node server.js
+
+ğŸš€ TixMaster API server running on http://localhost:3000
+ğŸ“Š Health check: http://localhost:3000/health
+ğŸ” OAuth routes:
+   - Google login: http://localhost:3000/auth/google
+   - Callback: http://localhost:3000/auth/google/callback
+ğŸš© Feature flags: http://localhost:3000/api/feature-flags
+âŒ Failed to initialize feature flags: ReferenceError: featureFlagsMiddleware is not defined
+    at Server.<anonymous> (C:\Users\User\TixMaster\backend\server.js:140:9)
+    at Object.onceWrapper (node:events:633:28)
+    at Server.emit (node:events:531:35)
+    at emitListeningNT (node:net:1983:10)
+    at process.processTicksAndRejections (node:internal/process/task_queues:89:21)
+­n²×¤î§å¦¸¤u§@¶Ü (Y/N)? ­n²×¤î§å¦¸¤u§@¶Ü (Y/N)? 

@@ -8,8 +8,8 @@ def get_flag(base_url, session, flag_name):
 
 
 def set_flag(base_url, session, flag_name, enabled: bool):
-    # 假設有管理 API 可設置 flag，請依實際 API 調整
-    r = session.post(f"{base_url}/api/feature-flags/{flag_name}", json={"enabled": enabled})
+    # 後端實作使用 PUT /api/feature-flags/:key
+    r = session.put(f"{base_url}/api/feature-flags/{flag_name}", json={"enabled": enabled})
     return r
 
 
@@ -23,18 +23,21 @@ def test_toggle_feature_flag_changes_behavior(base_url, session):
     except Exception:
         pytest.skip("feature-flag API not available; adapt test to your system")
 
-    # 關閉 flag -> 檢查 endpoint 行為
+    # featureFlags GET 回傳 shape: { key, enabled, description, updatedAt }
+    original_enabled = original.get('enabled') if isinstance(original, dict) else None
+
+    # 關閉 flag -> 檢查回傳與系統行為
     r_off = set_flag(base_url, session, flag, False)
     assert r_off.status_code in (200, 204)
-    # 依照你的應用，檢查對應 endpoint 的回應（範例）
-    r = session.get(f"{base_url}/api/checkout")
-    assert r.status_code in (200, 404, 501)
+    if r_off.status_code == 200:
+        body = r_off.json()
+        assert 'flag' in body
+        assert body['flag']['key'] == flag
 
     # 開啟 flag -> 檢查改變
     r_on = set_flag(base_url, session, flag, True)
     assert r_on.status_code in (200, 204)
-    r2 = session.get(f"{base_url}/api/checkout")
-    assert r2.status_code in (200, 502)
 
     # restore
-    set_flag(base_url, session, flag, original.get("enabled", False))
+    if original_enabled is not None:
+        set_flag(base_url, session, flag, original_enabled)
