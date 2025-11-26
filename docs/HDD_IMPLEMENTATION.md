@@ -465,7 +465,7 @@ FROM (
 ### 測試頁面
 
 1. **測試工具**: [test-feature-flags.html](test-feature-flags.html)
-2. **自動化測試**: `node test-toggle.js`
+2. **自動化測試**: `node scripts/test-toggle.js`
 3. **結帳測試**: [checkout.html](checkout.html?eventId=1&quantity=2)
 
 ---
@@ -517,7 +517,7 @@ ENABLE_<FEATURE_NAME>
 
 - [Feature Flags Guide](FEATURE_FLAGS_GUIDE.md) - 完整的 Feature Flags 使用指南
 - [Usage Examples](backend/FEATURE_FLAGS_USAGE_EXAMPLES.md) - 實作範例
-- [Test Toggle Script](test-toggle.js) - 自動化測試腳本
+- [Test Toggle Script](scripts/test-toggle.js) - 自動化測試腳本
 
 ---
 

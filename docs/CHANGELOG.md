@@ -9,7 +9,7 @@
 **問題**: 管理員更新 Feature Flags 時出現 401 Unauthorized 錯誤
 
 **修復內容**:
-- ✅ [featureFlags.js](featureFlags.js) - 添加 JWT token 到 API 請求的 Authorization header
+- ✅ [featureFlags.js](frontend/js/featureFlags.js) - 添加 JWT token 到 API 請求的 Authorization header
 - ✅ [admin-login.html](admin-login.html) - 改用後端 API 進行真實認證
 - ✅ 新增 [create_admin.sql](create_admin.sql) - 管理員帳號創建腳本
 - ✅ 新增 [create_admin.ps1](create_admin.ps1) - PowerShell 執行腳本

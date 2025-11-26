@@ -33,7 +33,7 @@ def admin_token():
     try:
         # run from repo root; node script reads backend/.env fallback if needed
         proc = subprocess.run([
-            'node', 'tools/gen_admin_jwt.js'
+            'node', 'scripts/gen_admin_jwt.js'
         ], check=True, capture_output=True, text=True)
         token = proc.stdout.strip()
         if token:

@@ -13,7 +13,7 @@ let ADMIN_TOKEN: string | null = null;
 
 test.beforeAll(() => {
   try {
-    const out = execSync('node tools/gen_admin_jwt.js', { encoding: 'utf-8' }).trim();
+    const out = execSync('node scripts/gen_admin_jwt.js', { encoding: 'utf-8' }).trim();
     ADMIN_TOKEN = out;
   } catch (err) {
     console.warn('Could not generate admin token:', err);

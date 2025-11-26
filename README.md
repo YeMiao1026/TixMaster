@@ -308,13 +308,13 @@ GET    /api/orders/:id      # 查詢訂單
 
 必要的 GitHub Secret（請在 repo Settings -> Secrets 中設定）：
 
-- `JWT_SECRET`：用來在 CI 中產生本地 admin JWT（`tools/gen_admin_jwt.js` 會從 `backend/.env` 或此 secret 讀取），建議只在 CI 中以 secrets 提供。
+- `JWT_SECRET`：用來在 CI 中產生本地 admin JWT（`scripts/gen_admin_jwt.js` 會從 `backend/.env` 或此 secret 讀取），建議只在 CI 中以 secrets 提供。
 
 如何在 CI 中產生 admin token：
 
-- workflow 內會把 `JWT_SECRET` 寫入 `backend/.env`（當 secret 存在時），然後執行 `node tools/gen_admin_jwt.js` 並把輸出放入 `ADMIN_TOKEN` 環境變數，供 Playwright 與 pytest 使用。
+-- workflow 內會把 `JWT_SECRET` 寫入 `backend/.env`（當 secret 存在時），然後執行 `node scripts/gen_admin_jwt.js` 並把輸出放入 `ADMIN_TOKEN` 環境變數，供 Playwright 與 pytest 使用。
 
-注意：`tools/gen_admin_jwt.js` 現在會優先使用環境變數 `JWT_SECRET`（例如 CI secrets），如果本地未提供，會回退到 `backend/.env` 中的 `JWT_SECRET`（若存在）。建議在 CI/自動化環境使用 `JWT_SECRET` secret，並在本機開發時透過環境變數或臨時 `backend/.env` 提供。
+注意：`scripts/gen_admin_jwt.js` 現在會優先使用環境變數 `JWT_SECRET`（例如 CI secrets），如果本地未提供，會回退到 `backend/.env` 中的 `JWT_SECRET`（若存在）。建議在 CI/自動化環境使用 `JWT_SECRET` secret，並在本機開發時透過環境變數或臨時 `backend/.env` 提供。
 
 查看報告：
 
@@ -327,7 +327,7 @@ GET    /api/orders/:id      # 查詢訂單
 PowerShell (Windows):
 ```powershell
 # 產生 admin token (選填，若使用 backend/.env 的 JWT_SECRET)
-node tools/gen_admin_jwt.js > admin.token
+node scripts/gen_admin_jwt.js > admin.token
 $env:ADMIN_TOKEN = Get-Content admin.token -Raw
 
 # 安裝（一次）
@@ -349,7 +349,7 @@ npx playwright show-report
 Linux / macOS (bash):
 ```bash
 # (同上)
-node tools/gen_admin_jwt.js > admin.token
+node scripts/gen_admin_jwt.js > admin.token
 export ADMIN_TOKEN=$(cat admin.token)
 python -m pip install --upgrade pip
 pip install -r requirements-dev.txt

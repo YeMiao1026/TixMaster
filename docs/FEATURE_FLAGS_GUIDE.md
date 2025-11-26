@@ -89,7 +89,7 @@ CREATE TABLE feature_flags (
 #### 引入 SDK
 
 ```html
-<script src="featureFlags.js"></script>
+<script src="../js/featureFlags.js"></script>
 ```
 
 #### 初始化並檢查功能

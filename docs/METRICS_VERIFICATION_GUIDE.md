@@ -110,7 +110,7 @@ CREATE TABLE analytics_events (
 運行驗證腳本：
 
 ```bash
-node verify-metrics.js
+node scripts/verify-metrics.js
 ```
 
 **輸出範例**：
@@ -348,7 +348,7 @@ A:
 
 - [HDD_IMPLEMENTATION.md](HDD_IMPLEMENTATION.md) - 完整 HDD 實作文檔
 - [backend/routes/analytics.js](backend/routes/analytics.js) - Analytics API 實作
-- [verify-metrics.js](verify-metrics.js) - 驗證腳本原始碼
+- [verify-metrics.js](scripts/verify-metrics.js) - 驗證腳本原始碼
 - [checkout.html](checkout.html) - 結帳頁面實作
 
 ---
