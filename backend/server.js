@@ -212,6 +212,12 @@ app.use(errorHandler);
 /**
  * 🚀 啟動伺服器
  */
+// 啟動前檢查重要環境變數
+if (process.env.NODE_ENV === 'production' && !process.env.JWT_SECRET) {
+    console.error('❌ FATAL: JWT_SECRET is not set in production. Set JWT_SECRET environment variable and restart.');
+    process.exit(1);
+}
+
 app.listen(PORT, async () => {
     console.log(`🚀 TixMaster API server running on http://localhost:${PORT}`);
     console.log(`📊 Health check: http://localhost:${PORT}/health`);

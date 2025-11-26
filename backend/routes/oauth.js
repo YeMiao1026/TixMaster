@@ -89,6 +89,14 @@ router.get('/callback',
             const user = req.user;
             console.log('✅ Auth0 登入成功:', user && user.email);
 
+            // 確認 JWT_SECRET 是否有設定，避免 jwt.sign 拋出非友善錯誤
+            const jwtSecret = process.env.JWT_SECRET;
+            if (!jwtSecret) {
+                console.error('❌ JWT_SECRET is not set. Cannot sign token.');
+                // 在 server log 中清楚記錄，但回傳前端一般的 server_error 訊息
+                return res.redirect('/login.html?error=server_error');
+            }
+
             const token = jwt.sign(
                 {
                     userId: user.id,
@@ -96,7 +104,7 @@ router.get('/callback',
                     role: user.role || ROLES.USER,
                     loginMethod: 'auth0'
                 },
-                process.env.JWT_SECRET,
+                jwtSecret,
                 { expiresIn: '7d' }
             );
 
