@@ -9,6 +9,7 @@ const errorHandler = require('./middleware/errorHandler');
 const featureFlagsMiddleware = require('./middleware/featureFlags');
 const path = require('path');
 const fs = require('fs');
+const db = require('./config/database');
 
 // Import routes
 const usersRouter = require('./routes/users');
@@ -33,6 +34,12 @@ app.use(cors());
 // Body Parser - 解析請求內容
 app.use(express.json());  // 解析 JSON
 app.use(express.urlencoded({ extended: true }));  // 解析表單資料
+
+// Basic request logging to help debugging in production (prints method + path)
+app.use((req, res, next) => {
+    console.log(`[req] ${req.method} ${req.originalUrl}`);
+    next();
+});
 
 /**
  * 🔐 Session 設定
@@ -236,3 +243,38 @@ app.listen(PORT, async () => {
 });
 
 module.exports = app;
+
+/**
+ * Graceful shutdown and diagnostic handlers
+ * - Log uncaught exceptions / unhandled rejections
+ * - Capture SIGTERM/SIGINT to allow graceful DB pool shutdown
+ */
+process.on('uncaughtException', (err) => {
+    console.error('❌ Uncaught Exception:', err && err.stack ? err.stack : err);
+    // exit with failure (will be restarted by platform if configured)
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, p) => {
+    console.error('❌ Unhandled Rejection at:', p, 'reason:', reason);
+    process.exit(1);
+});
+
+async function shutdown(signal) {
+    try {
+        console.log(`ℹ️ Received ${signal} - shutting down gracefully...`);
+        if (db && db.pool && typeof db.pool.end === 'function') {
+            console.log('ℹ️ Closing DB pool...');
+            await db.pool.end();
+            console.log('ℹ️ DB pool closed');
+        }
+    } catch (e) {
+        console.error('❌ Error during shutdown:', e);
+    } finally {
+        // allow process to exit
+        process.exit(0);
+    }
+}
+
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));
