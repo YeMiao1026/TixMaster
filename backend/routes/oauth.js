@@ -27,21 +27,36 @@ const { ROLES } = require('../config/roles');
  * 4. 使用者在 Google 頁面登入並授權
  */
 // 開始 Auth0 登入流程
-router.get('/login',
-    passport.authenticate('auth0', {
-        scope: ['openid', 'profile', 'email'],
-        session: false
-    })
-);
+// If Auth0 strategy is not configured, expose a friendly route that redirects with an error
+if (!passport._strategy || !passport._strategy('auth0')) {
+    console.warn('[OAuth routes] Auth0 strategy is not configured - /auth endpoints will return an error redirect');
+
+    router.get('/login', (req, res) => {
+        return res.redirect('/login.html?error=oauth_unavailable');
+    });
+} else {
+    router.get('/login',
+        passport.authenticate('auth0', {
+            scope: ['openid', 'profile', 'email'],
+            session: false
+        })
+    );
+}
 
 // 開始 Auth0 Signup（註冊）流程 - 會在 Auth0 下啟用 signup 畫面
-router.get('/signup',
-    passport.authenticate('auth0', {
-        scope: ['openid', 'profile', 'email'],
-        session: false,
-        authParams: { screen_hint: 'signup' }
-    })
-);
+if (!passport._strategy || !passport._strategy('auth0')) {
+    router.get('/signup', (req, res) => {
+        return res.redirect('/login.html?error=oauth_unavailable');
+    });
+} else {
+    router.get('/signup',
+        passport.authenticate('auth0', {
+            scope: ['openid', 'profile', 'email'],
+            session: false,
+            authParams: { screen_hint: 'signup' }
+        })
+    );
+}
 
 /**
  * 路由 2: GET /auth/google/callback
@@ -61,12 +76,20 @@ router.get('/signup',
  * - ?code=xxx          (成功時)
  * - ?error=xxx         (失敗時)
  */
-router.get('/callback',
-    // 先印出 callback 收到的 query（Auth0 會傳回 code / error / state）
-    (req, res, next) => {
-        console.log('[Auth0] /auth/callback query =', req.query);
-        next();
-    },
+// Callback route
+if (!passport._strategy || !passport._strategy('auth0')) {
+    // If strategy missing, simply redirect to login with an error
+    router.get('/callback', (req, res) => {
+        console.warn('[OAuth callback] Auth0 strategy missing - redirecting with oauth_unavailable');
+        return res.redirect('/login.html?error=oauth_unavailable');
+    });
+} else {
+    router.get('/callback',
+        // 先印出 callback 收到的 query（Auth0 會傳回 code / error / state）
+        (req, res, next) => {
+            console.log('[Auth0] /auth/callback query =', req.query);
+            next();
+        },
     // 使用 custom callback 以便在失敗時記錄更詳細資訊
     (req, res, next) => {
         passport.authenticate('auth0', { session: false }, (err, user, info) => {
@@ -116,7 +139,8 @@ router.get('/callback',
             res.redirect('/login.html?error=server_error');
         }
     }
-);
+    );
+}
 
 /**
  * 路由 3: GET /auth/logout
