@@ -1,3 +1,12 @@
 url.md
 gen_admin_jwt.js
 .venv
+node_modules/
+backend/node_modules/
+.env
+.env.*
+.cache
+.DS_Store
+dist/
+coverage/
+*.log
