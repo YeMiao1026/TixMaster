@@ -1,3 +1,17 @@
+node_modules/
+backend/node_modules/
+.env
+.env.*
+.DS_Store
+.vscode/
+reports/
+*.log
+.idea/
+/.cache
+dist/
+coverage/
+.pytest_cache/
+/.serverless
 url.md
 gen_admin_jwt.js
 .venv

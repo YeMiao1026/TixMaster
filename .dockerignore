@@ -1,0 +1,14 @@
+node_modules
+backend/node_modules
+.git
+.github
+.env
+.env.*
+*.log
+reports
+coverage
+.pytest_cache
+dist
+.DS_Store
+.idea
+.vscode

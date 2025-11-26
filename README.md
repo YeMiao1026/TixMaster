@@ -364,3 +364,27 @@ npx playwright show-report
 
 - 在 CI 中使用 GitHub Secrets 提供 `JWT_SECRET`，請不要把機敏資料直接加入 repo。
 - 若將來要加入真實資料庫測試，請在 CI 使用受控的測試資料庫（或 GitHub Actions 的 ephemeral DB）並把連線字串放入 secrets（例如 `DATABASE_URL`）。
+
+---
+
+## 🛠 部署與建置注意事項（重要）
+
+1. 請不要將 `node_modules/` 或任何含敏感資訊的檔案（如 `.env`）提交到 Git 倉庫。若已不小心提交，請盡速 rotate secrets 並考慮使用 BFG/git-filter-repo 清理歷史。
+
+2. 本專案的後端位於 `backend/` 目錄；在部署到平台（如 Railway）時，建議將 **Root Directory** 或 Build Root 設為 `backend`，避免把 repo root 的不必要檔案複製到映像中。
+
+3. 我已加入範例的 `.gitignore` 與 `.dockerignore`，會忽略 `node_modules`、`.env` 與其他常見的開發檔案。部署前請確認你在專案根目錄不存在未追蹤的敏感檔案。
+
+4. Railway / Build 注意：若 build log 顯示「node_modules directory found in project root, this is likely a mistake」，請確認你已從 repo root 移除 `node_modules/` 並將其加入 `.gitignore`，然後重新 push。
+
+5. 在生產環境務必設置下列環境變數（至少）：
+   - `JWT_SECRET`
+   - `AUTH0_DOMAIN`
+   - `AUTH0_CLIENT_ID`
+   - `AUTH0_CLIENT_SECRET`
+   - `AUTH0_CALLBACK_URL`
+   - `DATABASE_URL`
+   - `SESSION_SECRET`
+
+6. 推薦將 session 存放改為持久化方案（例如 `connect-pg-simple` 或 Redis），以支援多副本與穩定性。
+
