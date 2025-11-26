@@ -67,9 +67,14 @@ app.use(session({
         httpOnly: true,
 
         // Secure: 只在 HTTPS 使用（生產環境應該設為 true）
-        secure: process.env.NODE_ENV === 'production'
+            secure: process.env.NODE_ENV === 'production',
+            // sameSite 設為 'lax' 允許跨站導向時的 cookie（如 OAuth callback）的傳遞
+            sameSite: 'lax'
     }
 }));
+
+    // 在部署於代理（如 Railway）時，需信任 proxy 以正確處理 secure cookie 與 req.secure
+    app.set('trust proxy', 1);
 
 /**
  * 🔑 Passport 初始化
