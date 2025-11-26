@@ -4,6 +4,7 @@
     "description": "TixMaster Event Ticketing System Backend API",
     "main": "server.js",
     "scripts": {
+        "prestart": "npm ci",
         "start": "node server.js",
         "dev": "nodemon server.js"
     },
