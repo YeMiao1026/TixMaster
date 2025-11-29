@@ -45,6 +45,29 @@
             opacity: 0.9;
         }
 
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+        }
+
+        .back-button:hover {
+            background: white;
+            transform: translateX(-5px);
+        }
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -236,6 +259,10 @@
 
 <body>
     <div class="hero" id="heroImage">
+        <a href="index.html" class="back-button">
+            <span>←</span>
+            <span>返回首頁</span>
+        </a>
         <div class="hero-overlay">
             <h1 id="heroTitle">載入中...</h1>
             <div class="hero-info" id="heroInfo"></div>
