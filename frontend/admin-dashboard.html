@@ -32,6 +32,29 @@
             font-size: 1.5rem;
         }
 
+        .admin-nav .nav-buttons {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .admin-nav .back-btn {
+            background: #6b7280;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 5px;
+            cursor: pointer;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .admin-nav .back-btn:hover {
+            background: #4b5563;
+        }
+
         .admin-nav .logout-btn {
             background: #ef4444;
             color: white;
@@ -215,8 +238,12 @@
     <!-- 頂部導航 -->
     <div class="admin-nav">
         <h1>🛡️ TixMaster 管理員後台</h1>
-        <div>
+        <div class="nav-buttons">
             <span style="margin-right: 20px;">管理員：<strong id="adminName"></strong></span>
+            <a href="index.html" class="back-btn">
+                <span>←</span>
+                <span>返回首頁</span>
+            </a>
             <button class="logout-btn" onclick="adminLogout()">登出</button>
         </div>
     </div>

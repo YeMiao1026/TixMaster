@@ -23,10 +23,26 @@
             background: white;
             padding: 20px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .navbar h1 {
             font-size: 1.5rem;
+            color: #2563eb;
+        }
+
+        .navbar .back-link {
+            color: #6b7280;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: color 0.3s;
+        }
+
+        .navbar .back-link:hover {
             color: #2563eb;
         }
 
@@ -327,6 +343,10 @@
     <!-- 導航列 -->
     <div class="navbar">
         <h1>🎫 TixMaster</h1>
+        <a href="index.html" class="back-link">
+            <span>←</span>
+            <span>返回首頁</span>
+        </a>
     </div>
 
     <div class="container">
@@ -490,7 +510,7 @@
                 date: '2025-12-24T20:00:00',
                 location: '國家音樂廳',
                 price: 3000,
-                image: 'https://images.unsplash.com/photo-1465847899078-b413929f7120?w=200'
+                image: 'https://pyxis.nymag.com/v1/imgs/625/392/19e6ad61bd706ff522b43b9b30530f613c-17-paul-mccarthy-tree.2x.h473.w710.jpg'
             }
         };
 

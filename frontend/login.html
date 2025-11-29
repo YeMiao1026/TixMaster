@@ -20,6 +20,31 @@
             align-items: center;
             justify-content: center;
             padding: 20px;
+            position: relative;
+        }
+
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+            text-decoration: none;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .back-button:hover {
+            background: white;
+            transform: translateX(-5px);
         }
 
         .login-container {
@@ -138,6 +163,11 @@
 </head>
 
 <body>
+    <a href="index.html" class="back-button">
+        <span>←</span>
+        <span>返回首頁</span>
+    </a>
+
     <div class="login-container">
         <div class="logo">
             <h1>🎫</h1>
