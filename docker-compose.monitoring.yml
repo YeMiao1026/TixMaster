@@ -42,6 +42,8 @@ services:
       - grafana-data:/var/lib/grafana
       # 掛載 provisioning 配置（自動配置數據源）
       - ./grafana/provisioning:/etc/grafana/provisioning
+      # 掛載 dashboards JSON 檔案
+      - ./grafana/dashboards:/var/lib/grafana/dashboards
     environment:
       # 管理員密碼（請在生產環境改用強密碼！）
       - GF_SECURITY_ADMIN_PASSWORD=admin
