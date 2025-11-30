@@ -91,10 +91,24 @@ HTTP 請求總數：
   - [x] 錯誤率
 
 ### Phase 5: 儀表板設計
-- [ ] 規劃 Grafana 儀表板排版
-- [ ] 設計視覺化圖表
-- [ ] 調整顏色與主題
-- [ ] 確保直觀易讀
+- [x] 規劃 Grafana 儀表板排版
+- [x] 設計視覺化圖表
+- [x] 調整顏色與主題
+- [x] 確保直觀易讀
+
+**完成內容**:
+- ✅ 建立完整的 Grafana Dashboard JSON (`grafana/dashboards/tixmaster-overview.json`)
+- ✅ 8 個精心設計的 Panel:
+  - CPU 使用率 & 記憶體使用量 (Gauge)
+  - HTTP 請求率 (Time Series)
+  - HTTP 回應時間 P50/P95 (Time Series)
+  - HTTP 錯誤率 4xx/5xx (Stacked Area)
+  - 活躍請求數 & 總請求數 (Gauge & Stat)
+  - HTTP 狀態碼分佈 (Pie Chart)
+- ✅ 顏色語意學設計 (綠/黃/紅 閾值)
+- ✅ 深色主題配置
+- ✅ 自動刷新 (5 秒)
+- ✅ 完整設定指南文件 (`MONITORING_SETUP_GUIDE.md`)
 
 ### Phase 6: 系統架構圖
 - [ ] 繪製系統架構圖
