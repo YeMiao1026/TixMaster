@@ -162,5 +162,15 @@ async function main() {
 
 main().catch((err) => {
   console.error('[SLO] Unexpected error:', err.message);
+
+  // Ensure reports are written even on unexpected errors
+  const summary = { total: 0, success: 0, errorCount: 1, errorRate: 1, errors: [{ code: 500, detail: err.message }] };
+  const meta = { baseUrl: BASE_URL, concurrency: CONCURRENCY, eventId: 'N/A', ticketId: 'N/A' };
+  const { jsonPath, mdPath } = writeReports(summary, meta);
+
+  console.log(`[SLO] Report JSON: ${jsonPath}`);
+  console.log(`[SLO] Report MD:   ${mdPath}`);
+  console.log(`[SLO] Status: Failed (errorRate=100%)`);
+
   process.exit(2);
 });

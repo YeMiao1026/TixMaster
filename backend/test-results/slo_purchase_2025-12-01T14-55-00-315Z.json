@@ -1,0 +1,22 @@
+{
+  "type": "SLO_CONCURRENCY_PURCHASE",
+  "status": "Passed",
+  "threshold": "errorRate <= 1%",
+  "summary": {
+    "total": 500,
+    "success": 500,
+    "errorCount": 0,
+    "errorRate": 0,
+    "errors": []
+  },
+  "meta": {
+    "baseUrl": "http://127.0.0.1:3000",
+    "concurrency": 500,
+    "eventId": 2,
+    "ticketId": 3,
+    "httpMaxSockets": 100,
+    "httpTimeoutMs": 15000,
+    "batchSize": 100,
+    "batchDelayMs": 50
+  }
+}
