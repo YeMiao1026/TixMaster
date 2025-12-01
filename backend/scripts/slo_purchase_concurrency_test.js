@@ -17,7 +17,7 @@ const path = require('path');
 const axios = require('axios');
 
 const BASE_URL = process.env.BASE_URL || 'http://127.0.0.1:3000';
-const CONCURRENCY = Number(process.env.CONCURRENCY || 100);
+const CONCURRENCY = Number(process.env.CONCURRENCY || 500);
 const PASSWORD = process.env.TEST_USER_PASSWORD || 'Test1234!';
 const REPORT_DIR = path.join(__dirname, '..', 'test-results');
 
