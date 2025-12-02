@@ -876,7 +876,6 @@ chmod +x quick_check.sh
 **最後更新**: 2025-11-30
 **維護者**: TixMaster DevOps Team
 
-**🆘 緊急聯絡**: [Slack #emergency] | [On-Call Phone]
 
 --- 
 

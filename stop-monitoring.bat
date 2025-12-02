@@ -1,30 +1,30 @@
 @echo off
 REM ====================================================
-REM TixMaster 監控系統停止腳本 (Windows)
+REM TixMaster Monitoring System Stop Script (Windows)
 REM ====================================================
 
 echo.
 echo ========================================
-echo   TixMaster 監控系統停止
+echo   TixMaster Monitoring System Stop
 echo ========================================
 echo.
 
-echo [1/1] 停止 Prometheus 和 Grafana...
+echo [1/1] Stopping Prometheus and Grafana...
 docker-compose -f docker-compose.monitoring.yml down
 
 if %errorlevel% neq 0 (
-    echo ❌ 停止失敗
+    echo ❌ Failed to stop
     pause
     exit /b 1
 )
 
 echo.
 echo ========================================
-echo   ✅ 監控系統已停止！
+echo   ✅ Monitoring System Stopped!
 echo ========================================
 echo.
-echo 💡 提示: 歷史數據已保存在 Docker volumes
-echo    如需刪除數據，請執行:
+echo 💡 Tip: Historical data is saved in Docker volumes
+echo    To delete data, run:
 echo    docker-compose -f docker-compose.monitoring.yml down -v
 echo.
 pause
