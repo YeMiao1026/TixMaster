@@ -187,11 +187,38 @@ app.use('/api/analytics', analyticsRouter);
  * - 日誌系統是否正確記錄錯誤
  * - 監控系統是否能偵測到伺服器掛掉
  * - 警報系統是否會觸發
+ *
+ * 🔒 安全保護：
+ * - 只在開發環境啟用（NODE_ENV !== 'production'）
+ * - 或需要明確設定 ENABLE_CRASH_API=true
  */
 app.post('/api/crash', (req, res) => {
+    // 檢查環境變數保護
+    const isProduction = process.env.NODE_ENV === 'production';
+    const crashApiEnabled = process.env.ENABLE_CRASH_API === 'true';
+
+    // 生產環境且未明確啟用時，拒絕請求
+    if (isProduction && !crashApiEnabled) {
+        logger.warn('🚫 Crash API blocked in production', {
+            endpoint: '/api/crash',
+            method: 'POST',
+            environment: process.env.NODE_ENV,
+            ip: req.ip,
+            timestamp: new Date().toISOString()
+        });
+
+        return res.status(403).json({
+            error: 'Forbidden',
+            message: 'Crash API is disabled in production environment',
+            hint: 'This endpoint is only available in development or when ENABLE_CRASH_API=true'
+        });
+    }
+
     logger.error('💥 CRASH API called - Server will crash intentionally', {
         endpoint: '/api/crash',
         method: 'POST',
+        environment: process.env.NODE_ENV,
+        ip: req.ip,
         timestamp: new Date().toISOString()
     });
 
@@ -203,7 +230,8 @@ app.post('/api/crash', (req, res) => {
     // 回應訊息（可能來不及送出）
     res.status(200).json({
         message: 'Server crashing...',
-        note: 'This is intentional for monitoring testing'
+        note: 'This is intentional for monitoring testing',
+        environment: process.env.NODE_ENV
     });
 });
 
