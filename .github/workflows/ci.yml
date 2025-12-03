@@ -1,0 +1,192 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, dev_front_end ]
+  pull_request:
+    branches: [ main, dev_front_end ]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      BASE_URL: http://localhost:3000
+      SKIP_DB: 'true'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          if [ -f requirements-dev.txt ]; then pip install -r requirements-dev.txt; fi
+
+      - name: Install npm dependencies
+        run: |
+          if [ -f package.json ]; then npm ci; fi
+
+      - name: Install backend npm dependencies
+        run: |
+          if [ -f backend/package.json ]; then npm ci --prefix backend; fi
+
+      - name: Install Playwright browsers
+        run: |
+          npx playwright install --with-deps
+
+      - name: Create backend .env from secrets (provide defaults)
+        run: |
+          mkdir -p backend
+          # Write JWT secret if provided, otherwise leave default dev secret
+          if [ -n "${{ secrets.JWT_SECRET }}" ]; then
+            echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" > backend/.env
+          else
+            echo "JWT_SECRET=dev_secret_for_tests" > backend/.env
+          fi
+          # Provide Auth0 values: use secrets if set, otherwise use placeholders so passport-auth0 won't throw
+          if [ -n "${{ secrets.AUTH0_DOMAIN }}" ]; then
+            echo "AUTH0_DOMAIN=${{ secrets.AUTH0_DOMAIN }}" >> backend/.env
+          else
+            echo "AUTH0_DOMAIN=example.local" >> backend/.env
+          fi
+          if [ -n "${{ secrets.AUTH0_CLIENT_ID }}" ]; then
+            echo "AUTH0_CLIENT_ID=${{ secrets.AUTH0_CLIENT_ID }}" >> backend/.env
+          else
+            echo "AUTH0_CLIENT_ID=local-client-id" >> backend/.env
+          fi
+          if [ -n "${{ secrets.AUTH0_CLIENT_SECRET }}" ]; then
+            echo "AUTH0_CLIENT_SECRET=${{ secrets.AUTH0_CLIENT_SECRET }}" >> backend/.env
+          else
+            echo "AUTH0_CLIENT_SECRET=local-client-secret" >> backend/.env
+          fi
+          # Optional callback URL
+          if [ -n "${{ secrets.AUTH0_CALLBACK_URL }}" ]; then
+            echo "AUTH0_CALLBACK_URL=${{ secrets.AUTH0_CALLBACK_URL }}" >> backend/.env
+          else
+            echo "AUTH0_CALLBACK_URL=http://localhost:3000/auth/callback" >> backend/.env
+          fi
+          echo "Wrote backend/.env (with defaults for Auth0 if secrets absent)"
+
+      - name: Export JWT_SECRET to workflow env
+        env:
+          JWT_SECRET_FROM_SECRETS: ${{ secrets.JWT_SECRET }}
+        run: |
+          if [ -n "$JWT_SECRET_FROM_SECRETS" ]; then
+            echo "JWT_SECRET=$JWT_SECRET_FROM_SECRETS" >> $GITHUB_ENV
+          else
+            echo "JWT_SECRET=dev_secret_for_tests" >> $GITHUB_ENV
+          fi
+
+      - name: Skip Postgres DB setup (SKIP_DB=true)
+        run: |
+          echo "SKIP_DB=true set - skipping postgres setup in CI"
+
+      - name: Generate admin JWT and export as env (robust)
+        id: gen_token
+        run: |
+          set -e
+          # Try using the repository helper first; fallback to inline generator if missing
+          if [ -f tools/gen_admin_jwt.js ]; then
+            TOKEN=$(node tools/gen_admin_jwt.js || true)
+          else
+            TOKEN=""
+          fi
+
+          if [ -z "$TOKEN" ]; then
+            echo "tools/gen_admin_jwt.js not available or returned empty, using inline generator"
+            TOKEN=$(node -e "const crypto=require('crypto');const s=process.env.JWT_SECRET||'dev_secret_for_tests';function b(u){return Buffer.from(u).toString('base64').replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');}const h=b(JSON.stringify({alg:'HS256',typ:'JWT'}));const now=Math.floor(Date.now()/1000);const p=b(JSON.stringify({userId:1,email:'admin@tixmaster.com',role:'admin',iat:now,exp:now+7*24*3600}));const sig=crypto.createHmac('sha256',s).update(h+'.'+p).digest('base64').replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');console.log(h+'.'+p+'.'+sig);")
+          fi
+
+          echo "ADMIN_TOKEN=$TOKEN" >> $GITHUB_ENV
+
+      - name: Start backend server (background via npm)
+        run: |
+          if [ -f backend/package.json ]; then
+            npm ci --prefix backend || (cat backend/npm-install.log 2>/dev/null || true; exit 1)
+            npm --prefix backend start > backend/server.log 2>&1 & echo $! > backend/server.pid || true
+            echo "Started backend (if applicable). PID: $(cat backend/server.pid 2>/dev/null || echo 'none')"
+          else
+            echo "No backend/package.json found; skipping backend start"
+          fi
+
+      - name: Wait for backend health endpoint (poll, up to 60s)
+        run: |
+          echo "Waiting up to 60s for http://localhost:3000/health"
+          SUCCESS=0
+          for i in $(seq 1 60); do
+            if curl -sSf http://localhost:3000/health > /dev/null 2>&1; then
+              echo "Backend health OK after ${i}s"
+              SUCCESS=1
+              break
+            fi
+            sleep 1
+          done
+          if [ "$SUCCESS" -ne 1 ]; then
+            echo "backend didn't respond to /health within 60s"
+            echo "==== backend/server.log (tail) ===="
+            tail -n 200 backend/server.log || true
+            echo "==== end server.log ===="
+            exit 1
+          fi
+
+      - name: Run npm audit (backend)
+        run: |
+          mkdir -p reports
+          if [ -f package.json ]; then
+            npm audit --production --json > reports/npm-audit-backend.json || true
+          else
+            echo '{}' > reports/npm-audit-backend.json
+          fi
+
+      - name: Install Python audit tools
+        run: |
+          python -m pip install --upgrade pip
+          pip install safety || true
+
+      - name: Run Python safety check (requirements-dev.txt)
+        run: |
+          mkdir -p reports
+          if [ -f requirements-dev.txt ]; then safety check --file=requirements-dev.txt --json > reports/safety-report.json || true; else echo '[]' > reports/safety-report.json; fi
+
+      - name: Run pytest
+        run: |
+          mkdir -p reports
+          pytest -q --junitxml=reports/tests-junit.xml --html=reports/test-report.html
+
+      - name: Run Playwright tests
+        run: |
+          npx playwright test --reporter=html
+
+      - name: Stop backend server and show logs
+        if: always()
+        run: |
+          if [ -f backend/server.pid ]; then
+            echo "Killing backend pid $(cat backend/server.pid)" || true
+            kill $(cat backend/server.pid) || true
+            sleep 1
+          fi
+          if [ -f backend/server.log ]; then
+            echo "==== backend/server.log (last 200 lines) ===="
+            tail -n 200 backend/server.log || true
+          fi
+
+      - name: Upload test reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-reports
+          path: |
+            reports
+            reports/playwright-report
+            reports/test-report.html
+            reports/tests-junit.xml
+            reports/npm-audit-backend.json
+            reports/safety-report.json
