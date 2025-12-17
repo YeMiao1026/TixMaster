@@ -162,7 +162,7 @@ ul { padding-left: 25px; }
                 </div>
                 <div style="border-top: 3px solid var(--accent-test); padding-top: 15px;">
                     <p style="color: var(--accent-test); font-weight: 700; font-size: 14px; margin:0;">TESTER</p>
-                    <p style="color: #fff; font-weight: 600; margin: 5px 0;">B11209023_許又升</p>
+                    <p style="color: #fff; font-weight: 600; margin: 5px 0;">B11209027_許又升</p>
                 </div>
             </div>
         </div>
@@ -406,7 +406,7 @@ ul { padding-left: 25px; }
         <h2 style="border-color: var(--accent-db);">Designing for Observability</h2>
         <div class="content">
             <div class="col-left">
-                <h3 style="color: var(--accent-db);">Dashboard Strategy</h3>
+                <h3 style="color: var(--accent-db);">Monitor Strategy</h3>
                 <p>Designed monitoring views based on user persona and context.</p>
                 <div style="background: var(--card-bg); padding: 20px; border-radius: 8px; margin-top: 15px;">
                     <div style="margin-bottom: 15px;">
@@ -414,8 +414,8 @@ ul { padding-left: 25px; }
                         <span style="font-size: 16px;">"Is the site up?" - Simple Status Page for End Users.</span>
                     </div>
                     <div>
-                        <strong style="color: #fff;">2. Internal (Grafana)</strong><br>
-                        <span style="font-size: 16px;">"How is it performing?" - Detailed Metrics (CPU, Latency) for DevOps.</span>
+                        <strong style="color: #fff;">2. Internal (Alertmanager)</strong><br>
+                        <span style="font-size: 16px;">"A detailed metrics alert regarding recent error occurrence has been generated for DevOps review."</span>
                     </div>
                 </div>
             </div>
@@ -463,7 +463,32 @@ ul { padding-left: 25px; }
         </div>
     </div>
 
-    <!-- SLIDE 9: Chaos Engineering -->
+        <!-- SLIDE 9: Feature Toggle & HDD Testing Matrix -->
+    <div class="slide">
+        <div class="role-badge" style="color: var(--accent-test); border: 1px solid var(--accent-test);">Tester</div>
+        <h2 style="border-color: var(--accent-test);">Feature Toggle & HDD Testing Matrix</h2>
+        <div class="content">   
+            <div class="col-left">
+                <h3 style="color: var(--accent-test);">Feature Toggle & HDD Testing Matrix</h3>
+                <p>Testing Feature Toggles with a structured matrix.</p>
+                <ul>
+                    <li>Lifecycle → create / read / update</li>
+                    <li>Invalid Payload → defensive behavior (400)</li>
+                    <li>Concurrency → no 5xx under race conditions</li>
+                    <li>Integration → UI & API consistency</li>
+                </ul>
+            </div>
+            <div class="col-right">
+                <div class="placeholder">
+                    <i class="fa-solid fa-heart-pulse" style="font-size: 60px; margin-bottom: 15px; color: var(--accent-test);"></i>
+                    <p><img src=".\test_pic_3.png" alt="圖片無法顯示"></p>
+                    <p><img src=".\test_pic_4.png" alt="圖片無法顯示"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- SLIDE 10: Chaos Engineering -->
     <div class="slide">
         <div class="role-badge" style="color: var(--accent-test); border: 1px solid var(--accent-test);">Tester</div>
         <h2 style="border-color: var(--accent-test);">Chaos & Observability</h2>
